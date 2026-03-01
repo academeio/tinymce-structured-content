@@ -1,0 +1,114 @@
+import { describe, it, expect, beforeEach } from 'vitest';
+import { JSDOM } from 'jsdom';
+import {
+  findPlaceholderFields,
+  resolveField,
+  getNextField,
+  getPrevField
+} from '../src/placeholders';
+
+describe('findPlaceholderFields', () => {
+  it('finds all tmpl-field elements and extracts metadata', () => {
+    const dom = new JSDOM(`
+      <div>
+        <span class="tmpl-field" data-field="date" data-required="true">Enter date</span>
+        <span class="tmpl-field" data-field="notes">Add notes</span>
+      </div>
+    `);
+    const fields = findPlaceholderFields(dom.window.document);
+    expect(fields).toHaveLength(2);
+    expect(fields[0].name).toBe('date');
+    expect(fields[0].required).toBe(true);
+    expect(fields[0].defaultText).toBe('Enter date');
+    expect(fields[0].resolved).toBe(false);
+    expect(fields[1].name).toBe('notes');
+    expect(fields[1].required).toBe(false);
+  });
+
+  it('returns empty array when no placeholders exist', () => {
+    const dom = new JSDOM('<div><p>No fields here</p></div>');
+    expect(findPlaceholderFields(dom.window.document)).toHaveLength(0);
+  });
+});
+
+describe('resolveField', () => {
+  it('strips tmpl-field class and data attributes when text is modified', () => {
+    const dom = new JSDOM(
+      '<span class="tmpl-field" data-field="date" data-required="true">Enter date</span>'
+    );
+    const el = dom.window.document.querySelector('.tmpl-field') as HTMLElement;
+    const field = { element: el, name: 'date', defaultText: 'Enter date', required: true, resolved: false };
+
+    el.textContent = 'March 2026';
+    resolveField(field);
+
+    expect(field.resolved).toBe(true);
+    expect(el.classList.contains('tmpl-field')).toBe(false);
+    expect(el.hasAttribute('data-field')).toBe(false);
+    expect(el.hasAttribute('data-required')).toBe(false);
+    expect(el.textContent).toBe('March 2026');
+  });
+
+  it('does not resolve if text still matches default', () => {
+    const dom = new JSDOM(
+      '<span class="tmpl-field" data-field="date">Enter date</span>'
+    );
+    const el = dom.window.document.querySelector('.tmpl-field') as HTMLElement;
+    const field = { element: el, name: 'date', defaultText: 'Enter date', required: false, resolved: false };
+
+    resolveField(field);
+
+    expect(field.resolved).toBe(false);
+    expect(el.classList.contains('tmpl-field')).toBe(true);
+  });
+});
+
+describe('getNextField / getPrevField', () => {
+  let fields: any[];
+
+  beforeEach(() => {
+    const dom = new JSDOM(`
+      <div>
+        <span class="tmpl-field" data-field="a">A</span>
+        <span class="tmpl-field" data-field="b">B</span>
+        <span class="tmpl-field" data-field="c">C</span>
+      </div>
+    `);
+    const els = dom.window.document.querySelectorAll('.tmpl-field');
+    fields = Array.from(els).map((el, i) => ({
+      element: el as HTMLElement,
+      name: ['a', 'b', 'c'][i],
+      defaultText: ['A', 'B', 'C'][i],
+      required: false,
+      resolved: false
+    }));
+  });
+
+  it('getNextField returns the next unresolved field', () => {
+    expect(getNextField(fields, fields[0])).toBe(fields[1]);
+    expect(getNextField(fields, fields[1])).toBe(fields[2]);
+  });
+
+  it('getNextField wraps around to the first field', () => {
+    expect(getNextField(fields, fields[2])).toBe(fields[0]);
+  });
+
+  it('getNextField skips resolved fields', () => {
+    fields[1].resolved = true;
+    expect(getNextField(fields, fields[0])).toBe(fields[2]);
+  });
+
+  it('getPrevField returns the previous unresolved field', () => {
+    expect(getPrevField(fields, fields[2])).toBe(fields[1]);
+    expect(getPrevField(fields, fields[1])).toBe(fields[0]);
+  });
+
+  it('getPrevField wraps around to the last field', () => {
+    expect(getPrevField(fields, fields[0])).toBe(fields[2]);
+  });
+
+  it('returns null when all fields are resolved', () => {
+    fields.forEach(f => f.resolved = true);
+    expect(getNextField(fields, fields[0])).toBeNull();
+  });
+});
