@@ -112,7 +112,7 @@ Extend the `data-field` attribute system:
 
 ---
 
-## Phase 4: Group & Personal Templates — v0.5.0
+## Phase 4: Group & Personal Templates — v0.5.0 ✓
 
 **Goal:** Users and groups can create, save, and share their own templates.
 
@@ -178,7 +178,7 @@ Extend the `data-field` attribute system:
 | 1 | v0.2.0 | Required field validation | Low | **Done** |
 | 2 | v0.3.0 | Typed placeholders (date, select, number) | Medium | **Done** |
 | 3 | v0.4.0 | Placeholder linking (auto-fill same fields) | Low-Medium | **Done** |
-| 4 | v0.5.0 | Group & personal templates | High | Medium |
+| 4 | v0.5.0 | Group & personal templates | High | **Done** |
 | 5 | v0.6.0 | Template versioning | High | Low |
 | 6 | v1.0.0 | Template analytics | Medium | Low |
 

@@ -50,3 +50,15 @@ See ~/Development/eportfolios/docs/plans/01-03-2026-tinymce-structured-content-d
 - `resolveField(field, fields?)` — optional second param enables linking
 - Linked fields get `data-linked` attribute and green-tinted background
 - `data-linked` is stripped on resolve (along with all other data attributes)
+
+## Group & Personal Templates (v0.5.0)
+
+- `TemplateDraft` interface: `{ title, description, content, category }`
+- `enableAuthoring: boolean` — shows "Create Template" button in browser footer
+- `scopes: ('personal' | 'group' | 'site')[]` — scope tabs in browser (2+ = tab bar)
+- `onSave(template, scope)` — callback for host app to persist templates
+- `fetch(query?, scope?)` — gains optional scope parameter
+- Authoring modal: TinyMCE editor + Insert Placeholder toolbar + live preview
+- `buildPlaceholderSpan(name, type, required, options?, min?, max?)` — generates tmpl-field HTML
+- `src/authoring.ts` — authoring modal module
+- `src/authoring-styles.ts` — authoring CSS
