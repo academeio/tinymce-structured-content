@@ -42,6 +42,12 @@ export const PLACEHOLDER_CSS = `
   z-index: 10000;
   box-shadow: 0 2px 8px rgba(0,0,0,0.15);
 }
+.tmpl-field[data-type="date"],
+.tmpl-field[data-type="select"],
+.tmpl-field[data-type="number"] {
+  cursor: pointer;
+  border-style: solid;
+}
 `;
 
 /** Find all placeholder fields in a document and return metadata */

@@ -283,6 +283,12 @@ describe('PLACEHOLDER_CSS', () => {
   it('contains shake animation', () => {
     expect(PLACEHOLDER_CSS).toContain('sc-shake');
   });
+
+  it('contains typed field cursor styles', () => {
+    expect(PLACEHOLDER_CSS).toContain('data-type="date"');
+    expect(PLACEHOLDER_CSS).toContain('data-type="select"');
+    expect(PLACEHOLDER_CSS).toContain('data-type="number"');
+  });
 });
 
 describe('showValidationToast', () => {
