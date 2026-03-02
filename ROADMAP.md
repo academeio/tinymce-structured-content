@@ -63,7 +63,7 @@ MVP feature set:
 
 ---
 
-## Phase 2: Typed Placeholders — v0.3.0
+## Phase 2: Typed Placeholders — v0.3.0 ✓
 
 **Goal:** Replace plain text placeholders with typed input widgets (date picker, dropdown, number).
 
@@ -176,7 +176,7 @@ Extend the `data-field` attribute system:
 | Phase | Version | Feature | Complexity | Priority |
 |-------|---------|---------|-----------|----------|
 | 1 | v0.2.0 | Required field validation | Low | **Done** |
-| 2 | v0.3.0 | Typed placeholders (date, select, number) | Medium | High |
+| 2 | v0.3.0 | Typed placeholders (date, select, number) | Medium | **Done** |
 | 3 | v0.4.0 | Placeholder linking (auto-fill same fields) | Low-Medium | Medium |
 | 4 | v0.5.0 | Group & personal templates | High | Medium |
 | 5 | v0.6.0 | Template versioning | High | Low |

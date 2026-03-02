@@ -32,3 +32,13 @@ See ~/Development/eportfolios/docs/plans/01-03-2026-tinymce-structured-content-d
 - `clearValidationErrors(doc)` — removes error styling
 - `showValidationToast(doc, count)` — notification toast, auto-dismiss 5s
 - In warn mode, `BeforeGetContent` event triggers validation automatically
+
+## Typed Placeholders (v0.3.0)
+
+- `data-type="date|select|number"` attribute on `tmpl-field` spans
+- `data-options="A|B|C"` for select fields (pipe-separated)
+- `data-min="1" data-max="5"` for number fields
+- Click typed field → popover with native input in parent page
+- `openPopover(doc, field)` / `closePopover(doc)` — widget API
+- Number fields validate range on resolve, show inline error
+- `src/widgets.ts` — popover rendering and styles
