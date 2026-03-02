@@ -84,6 +84,10 @@ export function resolveField(field: PlaceholderField): void {
   field.element.classList.remove('tmpl-field');
   field.element.removeAttribute('data-field');
   field.element.removeAttribute('data-required');
+  field.element.removeAttribute('data-type');
+  field.element.removeAttribute('data-options');
+  field.element.removeAttribute('data-min');
+  field.element.removeAttribute('data-max');
 }
 
 /** Return all required fields that have not been resolved */

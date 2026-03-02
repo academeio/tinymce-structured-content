@@ -55,6 +55,23 @@ describe('resolveField', () => {
     expect(el.textContent).toBe('March 2026');
   });
 
+  it('strips data-type, data-options, data-min, data-max on resolve', () => {
+    const dom = new JSDOM(
+      '<span class="tmpl-field" data-field="score" data-type="number" data-min="1" data-max="5" data-required="true">Score</span>'
+    );
+    const el = dom.window.document.querySelector('.tmpl-field') as HTMLElement;
+    const field = { element: el, name: 'score', defaultText: 'Score', required: true, resolved: false, type: 'number' as const, min: 1, max: 5 };
+
+    el.textContent = '3';
+    resolveField(field);
+
+    expect(field.resolved).toBe(true);
+    expect(el.hasAttribute('data-type')).toBe(false);
+    expect(el.hasAttribute('data-options')).toBe(false);
+    expect(el.hasAttribute('data-min')).toBe(false);
+    expect(el.hasAttribute('data-max')).toBe(false);
+  });
+
   it('does not resolve if text still matches default', () => {
     const dom = new JSDOM(
       '<span class="tmpl-field" data-field="date">Enter date</span>'
