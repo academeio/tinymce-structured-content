@@ -211,6 +211,15 @@ export function activatePlaceholders(editor: any, config?: StructuredContentConf
   const fields = findPlaceholderFields(doc);
   if (fields.length === 0) return;
 
+  // Mark linked fields (same data-field name appears 2+ times)
+  const nameCounts = new Map<string, number>();
+  fields.forEach((f) => nameCounts.set(f.name, (nameCounts.get(f.name) || 0) + 1));
+  fields.forEach((f) => {
+    if ((nameCounts.get(f.name) || 0) >= 2) {
+      f.element.setAttribute('data-linked', 'true');
+    }
+  });
+
   // Focus the first field
   const firstField = fields.find((f) => !f.resolved);
   if (firstField) {
@@ -230,7 +239,7 @@ export function activatePlaceholders(editor: any, config?: StructuredContentConf
     e.preventDefault();
 
     // Resolve current field if text was modified
-    resolveField(currentField);
+    resolveField(currentField, fields);
 
     // Navigate to next/prev
     const target = e.shiftKey
@@ -247,7 +256,7 @@ export function activatePlaceholders(editor: any, config?: StructuredContentConf
     const node = editor.selection.getNode();
     fields.forEach((field) => {
       if (field.element !== node && !field.element.contains(node)) {
-        resolveField(field);
+        resolveField(field, fields);
       }
     });
   });
@@ -256,7 +265,7 @@ export function activatePlaceholders(editor: any, config?: StructuredContentConf
   fields.forEach((field) => {
     if (field.type !== 'text') {
       field.element.addEventListener('click', () => {
-        openPopover(document, field, resolveField);
+        openPopover(document, field, (f) => resolveField(f, fields));
       });
     }
   });
