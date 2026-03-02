@@ -84,6 +84,77 @@ describe('resolveField', () => {
     expect(field.resolved).toBe(false);
     expect(el.classList.contains('tmpl-field')).toBe(true);
   });
+
+  it('strips data-linked on resolve', () => {
+    const dom = new JSDOM(
+      '<span class="tmpl-field" data-field="date" data-linked="true">Enter date</span>'
+    );
+    const el = dom.window.document.querySelector('.tmpl-field') as HTMLElement;
+    const field = { element: el, name: 'date', defaultText: 'Enter date', required: false, resolved: false, type: 'text' as const };
+
+    el.textContent = 'March 2026';
+    resolveField(field);
+
+    expect(el.hasAttribute('data-linked')).toBe(false);
+  });
+
+  it('propagates value to siblings with same data-field name', () => {
+    const dom = new JSDOM(`
+      <div>
+        <span class="tmpl-field" data-field="date" data-required="true">Enter date</span>
+        <span class="tmpl-field" data-field="notes">Add notes</span>
+        <span class="tmpl-field" data-field="date">Enter date</span>
+      </div>
+    `);
+    const fields = findPlaceholderFields(dom.window.document);
+
+    fields[0].element.textContent = 'March 2026';
+    resolveField(fields[0], fields);
+
+    // Sibling with same name should be resolved
+    expect(fields[2].resolved).toBe(true);
+    expect(fields[2].element.textContent).toBe('March 2026');
+    expect(fields[2].element.classList.contains('tmpl-field')).toBe(false);
+    // Different-name field should NOT be affected
+    expect(fields[1].resolved).toBe(false);
+    expect(fields[1].element.textContent).toBe('Add notes');
+  });
+
+  it('does not propagate when fields param is omitted (backward compat)', () => {
+    const dom = new JSDOM(`
+      <div>
+        <span class="tmpl-field" data-field="date">Enter date</span>
+        <span class="tmpl-field" data-field="date">Enter date</span>
+      </div>
+    `);
+    const fields = findPlaceholderFields(dom.window.document);
+
+    fields[0].element.textContent = 'March 2026';
+    resolveField(fields[0]);
+
+    // Without fields param, no propagation
+    expect(fields[1].resolved).toBe(false);
+    expect(fields[1].element.textContent).toBe('Enter date');
+  });
+
+  it('first-fill only — resolved siblings are independent after propagation', () => {
+    const dom = new JSDOM(`
+      <div>
+        <span class="tmpl-field" data-field="date">Enter date</span>
+        <span class="tmpl-field" data-field="date">Enter date</span>
+      </div>
+    `);
+    const fields = findPlaceholderFields(dom.window.document);
+
+    // First fill: propagates
+    fields[0].element.textContent = 'March 2026';
+    resolveField(fields[0], fields);
+
+    // Both resolved — siblings have no data-field attribute, so subsequent
+    // calls can't find them even if we somehow called resolveField again
+    expect(fields[0].element.hasAttribute('data-field')).toBe(false);
+    expect(fields[1].element.hasAttribute('data-field')).toBe(false);
+  });
 });
 
 describe('getNextField / getPrevField', () => {

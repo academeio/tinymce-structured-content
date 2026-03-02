@@ -80,9 +80,12 @@ export function findPlaceholderFields(doc: Document): PlaceholderField[] {
 }
 
 /** Check if a field's text has changed from its default and strip placeholder markup if so */
-export function resolveField(field: PlaceholderField): void {
+export function resolveField(field: PlaceholderField, fields?: PlaceholderField[]): void {
   const currentText = (field.element.textContent || '').trim();
   if (currentText === field.defaultText) return;
+
+  // Read name before stripping attributes
+  const fieldName = field.name;
 
   field.resolved = true;
   field.element.classList.remove('tmpl-field');
@@ -92,6 +95,17 @@ export function resolveField(field: PlaceholderField): void {
   field.element.removeAttribute('data-options');
   field.element.removeAttribute('data-min');
   field.element.removeAttribute('data-max');
+  field.element.removeAttribute('data-linked');
+
+  // Propagate to linked fields (same name, first-fill only)
+  if (fields && fieldName) {
+    fields.forEach((sibling) => {
+      if (sibling !== field && !sibling.resolved && sibling.name === fieldName) {
+        sibling.element.textContent = currentText;
+        resolveField(sibling); // no fields param = no further propagation
+      }
+    });
+  }
 }
 
 /** Return all required fields that have not been resolved */
