@@ -92,3 +92,46 @@ describe('openPopover — date', () => {
     expect(dom.window.document.querySelector('.sc-popover')).toBeNull();
   });
 });
+
+describe('openPopover — select', () => {
+  let dom: JSDOM;
+  let field: PlaceholderField;
+
+  beforeEach(() => {
+    dom = new JSDOM('<!DOCTYPE html><html><head></head><body></body></html>');
+    field = makeField(dom, '<span class="tmpl-field" data-field="level" data-type="select" data-options="Direct|Indirect|Distant">Level</span>');
+  });
+
+  afterEach(() => {
+    closePopover(dom.window.document);
+  });
+
+  it('creates a popover with a select element', () => {
+    openPopover(dom.window.document, field);
+    const select = dom.window.document.querySelector('.sc-popover select');
+    expect(select).not.toBeNull();
+  });
+
+  it('renders all options plus a placeholder', () => {
+    openPopover(dom.window.document, field);
+    const options = dom.window.document.querySelectorAll('.sc-popover select option');
+    // First option is the placeholder "Choose..."
+    expect(options).toHaveLength(4);
+    expect(options[0].textContent).toBe('Choose...');
+    expect((options[0] as HTMLOptionElement).disabled).toBe(true);
+    expect(options[1].textContent).toBe('Direct');
+    expect(options[2].textContent).toBe('Indirect');
+    expect(options[3].textContent).toBe('Distant');
+  });
+
+  it('updates field text and resolves on selection', () => {
+    openPopover(dom.window.document, field);
+    const select = dom.window.document.querySelector('.sc-popover select') as HTMLSelectElement;
+    select.value = 'Indirect';
+    select.dispatchEvent(new dom.window.Event('change'));
+
+    expect(field.element.textContent).toBe('Indirect');
+    expect(field.resolved).toBe(true);
+    expect(dom.window.document.querySelector('.sc-popover')).toBeNull();
+  });
+});

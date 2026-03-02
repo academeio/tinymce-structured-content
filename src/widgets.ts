@@ -88,6 +88,8 @@ function createInput(doc: Document, field: PlaceholderField, popover: HTMLElemen
   switch (field.type) {
     case 'date':
       return createDateInput(doc, field, popover);
+    case 'select':
+      return createSelectInput(doc, field, popover);
     default:
       return doc.createElement('span');
   }
@@ -104,4 +106,32 @@ function createDateInput(doc: Document, field: PlaceholderField, popover: HTMLEl
     }
   });
   return input;
+}
+
+function createSelectInput(doc: Document, field: PlaceholderField, popover: HTMLElement): HTMLElement {
+  const select = doc.createElement('select');
+
+  // Placeholder option
+  const placeholder = doc.createElement('option');
+  placeholder.textContent = 'Choose...';
+  placeholder.disabled = true;
+  placeholder.selected = true;
+  select.appendChild(placeholder);
+
+  (field.options || []).forEach((opt) => {
+    const option = doc.createElement('option');
+    option.value = opt;
+    option.textContent = opt;
+    select.appendChild(option);
+  });
+
+  select.addEventListener('change', () => {
+    if (select.value) {
+      field.element.textContent = select.value;
+      resolveField(field);
+      closePopover(doc);
+    }
+  });
+
+  return select;
 }
