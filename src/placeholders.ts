@@ -1,4 +1,4 @@
-import type { PlaceholderField } from './types';
+import type { PlaceholderField, StructuredContentConfig } from './types';
 
 /** CSS injected into the editor iframe for placeholder styling */
 export const PLACEHOLDER_CSS = `
@@ -162,7 +162,7 @@ export function showValidationToast(doc: Document, count: number): void {
  * Activate placeholder system on an editor.
  * Call after inserting a template. Sets up Tab navigation and field resolution.
  */
-export function activatePlaceholders(editor: any): void {
+export function activatePlaceholders(editor: any, config?: StructuredContentConfig): void {
   const doc: Document = editor.getDoc();
   injectPlaceholderStyles(doc);
 
@@ -209,4 +209,19 @@ export function activatePlaceholders(editor: any): void {
       }
     });
   });
+
+  // Validation on content extraction (warn mode)
+  if (config?.validation === 'warn') {
+    editor.on('BeforeGetContent', () => {
+      const currentDoc: Document = editor.getDoc();
+      const unresolvedRequired = getUnresolvedRequired(currentDoc);
+      if (unresolvedRequired.length > 0) {
+        highlightUnresolved(currentDoc);
+        editor.selection.select(unresolvedRequired[0].element, true);
+        showValidationToast(currentDoc, unresolvedRequired.length);
+      } else {
+        clearValidationErrors(currentDoc);
+      }
+    });
+  }
 }

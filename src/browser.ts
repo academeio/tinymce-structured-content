@@ -312,6 +312,6 @@ function renderModal(
 
     insertTemplate(editor, selectedTemplate.content, selectedTemplate.id, mode, config);
     closeBrowser();
-    activatePlaceholders(editor);
+    activatePlaceholders(editor, config);
   }
 }
