@@ -42,3 +42,66 @@ export function closePopover(doc: Document): void {
   const existing = doc.querySelector('.sc-popover');
   if (existing) existing.remove();
 }
+
+/** Open a typed popover for a placeholder field */
+export function openPopover(doc: Document, field: PlaceholderField): void {
+  closePopover(doc);
+  injectWidgetStyles(doc);
+
+  const popover = doc.createElement('div');
+  popover.className = 'sc-popover';
+
+  // Position popover near the field element
+  const rect = field.element.getBoundingClientRect();
+  popover.style.top = `${rect.bottom + 4}px`;
+  popover.style.left = `${rect.left}px`;
+
+  const content = createInput(doc, field, popover);
+  popover.appendChild(content);
+  doc.body.appendChild(popover);
+
+  // Focus the input
+  const input = popover.querySelector('input, select') as HTMLElement;
+  if (input) input.focus();
+
+  // Escape to close
+  const escHandler = (e: KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      closePopover(doc);
+      doc.removeEventListener('keydown', escHandler);
+    }
+  };
+  doc.addEventListener('keydown', escHandler);
+
+  // Click outside to close
+  const clickHandler = (e: MouseEvent) => {
+    if (!popover.contains(e.target as Node)) {
+      closePopover(doc);
+      doc.removeEventListener('mousedown', clickHandler);
+    }
+  };
+  // Delay to avoid immediate close from the triggering click
+  setTimeout(() => doc.addEventListener('mousedown', clickHandler), 0);
+}
+
+function createInput(doc: Document, field: PlaceholderField, popover: HTMLElement): HTMLElement {
+  switch (field.type) {
+    case 'date':
+      return createDateInput(doc, field, popover);
+    default:
+      return doc.createElement('span');
+  }
+}
+
+function createDateInput(doc: Document, field: PlaceholderField, popover: HTMLElement): HTMLElement {
+  const input = doc.createElement('input');
+  input.type = 'date';
+  input.addEventListener('change', () => {
+    if (input.value) {
+      field.element.textContent = input.value;
+      resolveField(field);
+      closePopover(doc);
+    }
+  });
+  return input;
+}
