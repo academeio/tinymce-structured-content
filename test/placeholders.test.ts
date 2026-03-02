@@ -9,7 +9,8 @@ import {
   isTemplateComplete,
   highlightUnresolved,
   clearValidationErrors,
-  PLACEHOLDER_CSS
+  PLACEHOLDER_CSS,
+  showValidationToast
 } from '../src/placeholders';
 
 describe('findPlaceholderFields', () => {
@@ -280,5 +281,26 @@ describe('PLACEHOLDER_CSS', () => {
 
   it('contains shake animation', () => {
     expect(PLACEHOLDER_CSS).toContain('sc-shake');
+  });
+});
+
+describe('showValidationToast', () => {
+  it('creates a toast element in the document', () => {
+    const dom = new JSDOM('<!DOCTYPE html><html><head></head><body></body></html>');
+    showValidationToast(dom.window.document, 3);
+
+    const toast = dom.window.document.querySelector('.sc-validation-toast');
+    expect(toast).not.toBeNull();
+    expect(toast!.textContent).toBe('3 required field(s) need to be filled');
+  });
+
+  it('replaces existing toast (idempotent)', () => {
+    const dom = new JSDOM('<!DOCTYPE html><html><head></head><body></body></html>');
+    showValidationToast(dom.window.document, 3);
+    showValidationToast(dom.window.document, 1);
+
+    const toasts = dom.window.document.querySelectorAll('.sc-validation-toast');
+    expect(toasts).toHaveLength(1);
+    expect(toasts[0].textContent).toBe('1 required field(s) need to be filled');
   });
 });

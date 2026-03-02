@@ -132,6 +132,32 @@ export function injectPlaceholderStyles(doc: Document): void {
   doc.head.appendChild(style);
 }
 
+/** Show a validation toast notification in the document */
+export function showValidationToast(doc: Document, count: number): void {
+  // Remove existing toast
+  const existing = doc.querySelector('.sc-validation-toast');
+  if (existing) existing.remove();
+
+  const toast = doc.createElement('div');
+  toast.className = 'sc-validation-toast';
+  toast.textContent = `${count} required field(s) need to be filled`;
+  doc.body.appendChild(toast);
+
+  // Auto-dismiss after 5 seconds
+  setTimeout(() => toast.remove(), 5000);
+
+  // Dismiss when a placeholder field receives focus
+  const dismissOnFocus = () => {
+    toast.remove();
+    doc.removeEventListener('focusin', dismissOnFocus);
+  };
+  doc.addEventListener('focusin', (e: Event) => {
+    if ((e.target as HTMLElement)?.classList?.contains('tmpl-field')) {
+      dismissOnFocus();
+    }
+  });
+}
+
 /**
  * Activate placeholder system on an editor.
  * Call after inserting a template. Sets up Tab navigation and field resolution.
