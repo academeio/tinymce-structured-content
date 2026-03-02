@@ -306,6 +306,10 @@ describe('PLACEHOLDER_CSS', () => {
     expect(PLACEHOLDER_CSS).toContain('data-type="select"');
     expect(PLACEHOLDER_CSS).toContain('data-type="number"');
   });
+
+  it('contains linked field styles', () => {
+    expect(PLACEHOLDER_CSS).toContain('data-linked');
+  });
 });
 
 describe('showValidationToast', () => {

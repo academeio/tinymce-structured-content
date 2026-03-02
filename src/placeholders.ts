@@ -49,6 +49,10 @@ export const PLACEHOLDER_CSS = `
   cursor: pointer;
   border-style: solid;
 }
+.tmpl-field[data-linked] {
+  background: #e0f0e8;
+  border-color: #6ab089;
+}
 `;
 
 /** Find all placeholder fields in a document and return metadata */
