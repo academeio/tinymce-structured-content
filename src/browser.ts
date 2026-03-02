@@ -2,6 +2,7 @@ import type { Template, Category, StructuredContentConfig } from './types';
 import { injectModalStyles } from './styles';
 import { insertTemplate } from './insertion';
 import { activatePlaceholders } from './placeholders';
+import { openAuthoring } from './authoring';
 
 /** Filter templates by category and search term */
 export function filterTemplates(
@@ -39,8 +40,9 @@ export function openBrowser(editor: any, config: StructuredContentConfig): void 
   let allCategories: Category[] = [];
 
   // Resolve template data
+  const initialScope = config.scopes?.[0];
   const dataPromise: Promise<void> = config.fetch
-    ? config.fetch().then((result) => {
+    ? config.fetch(undefined, initialScope).then((result) => {
         allTemplates = result.templates;
         allCategories = result.categories;
       })
@@ -69,14 +71,16 @@ export function closeBrowser(): void {
 function renderModal(
   editor: any,
   config: StructuredContentConfig,
-  templates: Template[],
-  categories: Category[]
+  initialTemplates: Template[],
+  initialCategories: Category[]
 ): void {
   const title = config.modalTitle || 'Structured Content';
   const insertMode = config.insertMode || 'both';
   let activeCategory: string | null = null;
   let searchQuery = '';
   let selectedTemplate: Template | null = null;
+  let templates = initialTemplates;
+  let categories = initialCategories;
 
   // Build overlay
   const overlay = document.createElement('div');
@@ -101,6 +105,41 @@ function renderModal(
   closeBtn.addEventListener('click', closeBrowser);
   header.appendChild(h3);
   header.appendChild(closeBtn);
+
+  let activeScope = config.scopes?.[0] || 'site';
+
+  // -- Scope tabs (only when 2+ scopes) --
+  let scopeTabsEl: HTMLElement | null = null;
+  if (config.scopes && config.scopes.length >= 2) {
+    scopeTabsEl = document.createElement('div');
+    scopeTabsEl.className = 'sc-scope-tabs';
+
+    const scopeLabels: Record<string, string> = {
+      personal: 'My Templates',
+      group: 'Group',
+      site: 'Site',
+    };
+
+    config.scopes.forEach((scope) => {
+      const tab = document.createElement('button');
+      tab.className = 'sc-scope-tab' + (scope === activeScope ? ' active' : '');
+      tab.textContent = scopeLabels[scope] || scope;
+      tab.dataset.scope = scope;
+      tab.addEventListener('click', () => {
+        activeScope = scope;
+        updateScopeTabsActive();
+        if (config.fetch) {
+          config.fetch(searchQuery || undefined, scope).then((result) => {
+            templates = result.templates;
+            categories = result.categories;
+            rebuildSidebar();
+            renderCards();
+          });
+        }
+      });
+      scopeTabsEl!.appendChild(tab);
+    });
+  }
 
   // -- Body (sidebar + main) --
   const body = document.createElement('div');
@@ -201,9 +240,27 @@ function renderModal(
   preview.appendChild(previewContent);
   preview.appendChild(previewActions);
 
+  // -- Footer (only when enableAuthoring is true) --
+  let footerEl: HTMLElement | null = null;
+  if (config.enableAuthoring) {
+    footerEl = document.createElement('div');
+    footerEl.className = 'sc-footer';
+
+    const createBtn = document.createElement('button');
+    createBtn.className = 'sc-btn sc-btn-primary';
+    createBtn.textContent = '+ Create Template';
+    createBtn.addEventListener('click', () => {
+      closeBrowser();
+      openAuthoring(config, categories);
+    });
+    footerEl.appendChild(createBtn);
+  }
+
   // Assemble modal
   modal.appendChild(header);
+  if (scopeTabsEl) modal.appendChild(scopeTabsEl);
   modal.appendChild(body);
+  if (footerEl) modal.appendChild(footerEl);
   modal.appendChild(preview);
   overlay.appendChild(modal);
 
@@ -229,6 +286,42 @@ function renderModal(
   searchInput.focus();
 
   // -- Helper functions --
+
+  function updateScopeTabsActive(): void {
+    if (!scopeTabsEl) return;
+    scopeTabsEl.querySelectorAll('.sc-scope-tab').forEach((btn) => {
+      const el = btn as HTMLElement;
+      el.classList.toggle('active', el.dataset.scope === activeScope);
+    });
+  }
+
+  function rebuildSidebar(): void {
+    sidebar.innerHTML = '';
+    activeCategory = null;
+
+    const allBtn = document.createElement('button');
+    allBtn.className = 'sc-sidebar-item active';
+    allBtn.textContent = 'All';
+    allBtn.addEventListener('click', () => {
+      activeCategory = null;
+      updateSidebarActive();
+      renderCards();
+    });
+    sidebar.appendChild(allBtn);
+
+    categories.forEach((cat) => {
+      const btn = document.createElement('button');
+      btn.className = 'sc-sidebar-item';
+      btn.textContent = cat.label;
+      btn.dataset.categoryId = cat.id;
+      btn.addEventListener('click', () => {
+        activeCategory = cat.id;
+        updateSidebarActive();
+        renderCards();
+      });
+      sidebar.appendChild(btn);
+    });
+  }
 
   function updateSidebarActive(): void {
     sidebar.querySelectorAll('.sc-sidebar-item').forEach((btn) => {
