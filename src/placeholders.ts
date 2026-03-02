@@ -1,4 +1,5 @@
 import type { PlaceholderField, StructuredContentConfig } from './types';
+import { openPopover, closePopover, injectWidgetStyles } from './widgets';
 
 /** CSS injected into the editor iframe for placeholder styling */
 export const PLACEHOLDER_CSS = `
@@ -183,6 +184,7 @@ export function showValidationToast(doc: Document, count: number): void {
 export function activatePlaceholders(editor: any, config?: StructuredContentConfig): void {
   const doc: Document = editor.getDoc();
   injectPlaceholderStyles(doc);
+  injectWidgetStyles(document);
 
   const fields = findPlaceholderFields(doc);
   if (fields.length === 0) return;
@@ -226,6 +228,15 @@ export function activatePlaceholders(editor: any, config?: StructuredContentConf
         resolveField(field);
       }
     });
+  });
+
+  // Click handler for typed fields — open widget popover
+  fields.forEach((field) => {
+    if (field.type !== 'text') {
+      field.element.addEventListener('click', () => {
+        openPopover(document, field);
+      });
+    }
   });
 
   // Validation on content extraction (warn mode)
