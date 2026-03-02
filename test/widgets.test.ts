@@ -135,3 +135,63 @@ describe('openPopover — select', () => {
     expect(dom.window.document.querySelector('.sc-popover')).toBeNull();
   });
 });
+
+describe('openPopover — number', () => {
+  let dom: JSDOM;
+  let field: PlaceholderField;
+
+  beforeEach(() => {
+    dom = new JSDOM('<!DOCTYPE html><html><head></head><body></body></html>');
+    field = makeField(dom, '<span class="tmpl-field" data-field="score" data-type="number" data-min="1" data-max="5">Score</span>');
+  });
+
+  afterEach(() => {
+    closePopover(dom.window.document);
+  });
+
+  it('creates a popover with a number input', () => {
+    openPopover(dom.window.document, field);
+    const input = dom.window.document.querySelector('.sc-popover input[type="number"]') as HTMLInputElement;
+    expect(input).not.toBeNull();
+    expect(input.min).toBe('1');
+    expect(input.max).toBe('5');
+  });
+
+  it('resolves field with valid value on change', () => {
+    openPopover(dom.window.document, field);
+    const input = dom.window.document.querySelector('.sc-popover input[type="number"]') as HTMLInputElement;
+    input.value = '3';
+    input.dispatchEvent(new dom.window.Event('change'));
+
+    expect(field.element.textContent).toBe('3');
+    expect(field.resolved).toBe(true);
+    expect(dom.window.document.querySelector('.sc-popover')).toBeNull();
+  });
+
+  it('shows error for out-of-range value', () => {
+    openPopover(dom.window.document, field);
+    const input = dom.window.document.querySelector('.sc-popover input[type="number"]') as HTMLInputElement;
+    input.value = '10';
+    input.dispatchEvent(new dom.window.Event('change'));
+
+    // Field should NOT be resolved
+    expect(field.resolved).toBe(false);
+    // Error message should appear
+    const error = dom.window.document.querySelector('.sc-popover-error');
+    expect(error).not.toBeNull();
+    expect(error!.textContent).toContain('between');
+    // Popover should still be open
+    expect(dom.window.document.querySelector('.sc-popover')).not.toBeNull();
+  });
+
+  it('works without min/max constraints', () => {
+    field = makeField(dom, '<span class="tmpl-field" data-field="count" data-type="number">Count</span>');
+    openPopover(dom.window.document, field);
+    const input = dom.window.document.querySelector('.sc-popover input[type="number"]') as HTMLInputElement;
+    input.value = '999';
+    input.dispatchEvent(new dom.window.Event('change'));
+
+    expect(field.element.textContent).toBe('999');
+    expect(field.resolved).toBe(true);
+  });
+});

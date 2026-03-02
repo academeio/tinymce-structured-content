@@ -90,6 +90,8 @@ function createInput(doc: Document, field: PlaceholderField, popover: HTMLElemen
       return createDateInput(doc, field, popover);
     case 'select':
       return createSelectInput(doc, field, popover);
+    case 'number':
+      return createNumberInput(doc, field, popover);
     default:
       return doc.createElement('span');
   }
@@ -134,4 +136,55 @@ function createSelectInput(doc: Document, field: PlaceholderField, popover: HTML
   });
 
   return select;
+}
+
+function createNumberInput(doc: Document, field: PlaceholderField, popover: HTMLElement): HTMLElement {
+  const wrapper = doc.createElement('div');
+
+  const input = doc.createElement('input');
+  input.type = 'number';
+  if (field.min !== undefined) input.min = String(field.min);
+  if (field.max !== undefined) input.max = String(field.max);
+  wrapper.appendChild(input);
+
+  input.addEventListener('change', () => {
+    // Clear previous error
+    const existingError = popover.querySelector('.sc-popover-error');
+    if (existingError) existingError.remove();
+
+    const val = Number(input.value);
+    if (input.value === '') return;
+
+    // Range validation
+    if (field.min !== undefined && val < field.min) {
+      showNumberError(doc, popover, field.min, field.max);
+      return;
+    }
+    if (field.max !== undefined && val > field.max) {
+      showNumberError(doc, popover, field.min, field.max);
+      return;
+    }
+
+    field.element.textContent = input.value;
+    resolveField(field);
+    closePopover(doc);
+  });
+
+  return wrapper;
+}
+
+function showNumberError(doc: Document, popover: HTMLElement, min?: number, max?: number): void {
+  const existing = popover.querySelector('.sc-popover-error');
+  if (existing) existing.remove();
+
+  const error = doc.createElement('div');
+  error.className = 'sc-popover-error';
+  if (min !== undefined && max !== undefined) {
+    error.textContent = `Value must be between ${min} and ${max}`;
+  } else if (min !== undefined) {
+    error.textContent = `Value must be at least ${min}`;
+  } else if (max !== undefined) {
+    error.textContent = `Value must be at most ${max}`;
+  }
+  popover.appendChild(error);
 }
