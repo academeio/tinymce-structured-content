@@ -18,6 +18,30 @@ export const PLACEHOLDER_CSS = `
   outline: 2px solid #0d6efd;
   outline-offset: 1px;
 }
+.tmpl-field-error {
+  background: #fde8e8;
+  border: 1px solid #d9534f;
+  border-left: 3px solid #d9534f;
+  animation: sc-shake 0.3s ease-in-out;
+}
+@keyframes sc-shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-3px); }
+  75% { transform: translateX(3px); }
+}
+.sc-validation-toast {
+  position: fixed;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #d9534f;
+  color: #fff;
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  z-index: 10000;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
 `;
 
 /** Find all placeholder fields in a document and return metadata */

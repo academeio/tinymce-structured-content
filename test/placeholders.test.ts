@@ -8,7 +8,8 @@ import {
   getUnresolvedRequired,
   isTemplateComplete,
   highlightUnresolved,
-  clearValidationErrors
+  clearValidationErrors,
+  PLACEHOLDER_CSS
 } from '../src/placeholders';
 
 describe('findPlaceholderFields', () => {
@@ -265,5 +266,19 @@ describe('clearValidationErrors', () => {
       </div>
     `);
     expect(() => clearValidationErrors(dom.window.document)).not.toThrow();
+  });
+});
+
+describe('PLACEHOLDER_CSS', () => {
+  it('contains error styling for tmpl-field-error', () => {
+    expect(PLACEHOLDER_CSS).toContain('.tmpl-field-error');
+  });
+
+  it('contains toast styling for sc-validation-toast', () => {
+    expect(PLACEHOLDER_CSS).toContain('.sc-validation-toast');
+  });
+
+  it('contains shake animation', () => {
+    expect(PLACEHOLDER_CSS).toContain('sc-shake');
   });
 });
