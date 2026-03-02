@@ -6,7 +6,9 @@ import {
   getNextField,
   getPrevField,
   getUnresolvedRequired,
-  isTemplateComplete
+  isTemplateComplete,
+  highlightUnresolved,
+  clearValidationErrors
 } from '../src/placeholders';
 
 describe('findPlaceholderFields', () => {
@@ -196,5 +198,72 @@ describe('isTemplateComplete', () => {
   it('returns true when document has no placeholders at all', () => {
     const dom = new JSDOM('<div><p>Plain text</p></div>');
     expect(isTemplateComplete(dom.window.document)).toBe(true);
+  });
+});
+
+describe('highlightUnresolved', () => {
+  it('adds tmpl-field-error class to unresolved required fields', () => {
+    const dom = new JSDOM(`
+      <div>
+        <span class="tmpl-field" data-field="date" data-required="true">Enter date</span>
+        <span class="tmpl-field" data-field="notes">Add notes</span>
+        <span class="tmpl-field" data-field="name" data-required="true">Enter name</span>
+      </div>
+    `);
+    const result = highlightUnresolved(dom.window.document);
+    expect(result).toHaveLength(2);
+
+    const els = dom.window.document.querySelectorAll('.tmpl-field-error');
+    expect(els).toHaveLength(2);
+    expect(els[0].getAttribute('data-field')).toBe('date');
+    expect(els[1].getAttribute('data-field')).toBe('name');
+  });
+
+  it('does not add error class to non-required fields', () => {
+    const dom = new JSDOM(`
+      <div>
+        <span class="tmpl-field" data-field="notes">Add notes</span>
+      </div>
+    `);
+    highlightUnresolved(dom.window.document);
+    expect(dom.window.document.querySelectorAll('.tmpl-field-error')).toHaveLength(0);
+  });
+
+  it('returns empty array when all required fields are resolved', () => {
+    const dom = new JSDOM(`
+      <div>
+        <span class="tmpl-field" data-field="date" data-required="true">Enter date</span>
+      </div>
+    `);
+    const fields = findPlaceholderFields(dom.window.document);
+    fields[0].element.textContent = 'March 2026';
+    resolveField(fields[0]);
+
+    expect(highlightUnresolved(dom.window.document)).toHaveLength(0);
+  });
+});
+
+describe('clearValidationErrors', () => {
+  it('removes tmpl-field-error class from all fields', () => {
+    const dom = new JSDOM(`
+      <div>
+        <span class="tmpl-field tmpl-field-error" data-field="date" data-required="true">Enter date</span>
+        <span class="tmpl-field tmpl-field-error" data-field="name" data-required="true">Enter name</span>
+      </div>
+    `);
+    clearValidationErrors(dom.window.document);
+
+    expect(dom.window.document.querySelectorAll('.tmpl-field-error')).toHaveLength(0);
+    // Original tmpl-field class should remain
+    expect(dom.window.document.querySelectorAll('.tmpl-field')).toHaveLength(2);
+  });
+
+  it('is safe to call when no errors exist', () => {
+    const dom = new JSDOM(`
+      <div>
+        <span class="tmpl-field" data-field="date">Enter date</span>
+      </div>
+    `);
+    expect(() => clearValidationErrors(dom.window.document)).not.toThrow();
   });
 });

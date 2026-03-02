@@ -53,6 +53,20 @@ export function isTemplateComplete(doc: Document): boolean {
   return getUnresolvedRequired(doc).length === 0;
 }
 
+/** Add error styling to all unresolved required fields */
+export function highlightUnresolved(doc: Document): PlaceholderField[] {
+  const unresolvedRequired = getUnresolvedRequired(doc);
+  unresolvedRequired.forEach((f) => f.element.classList.add('tmpl-field-error'));
+  return unresolvedRequired;
+}
+
+/** Remove error styling from all placeholder fields */
+export function clearValidationErrors(doc: Document): void {
+  doc.querySelectorAll('.tmpl-field-error').forEach((el) => {
+    el.classList.remove('tmpl-field-error');
+  });
+}
+
 /** Get the next unresolved field after the current one (wraps around) */
 export function getNextField(
   fields: PlaceholderField[],
