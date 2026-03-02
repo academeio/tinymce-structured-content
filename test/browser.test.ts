@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { filterTemplates } from '../src/browser';
+import { MODAL_CSS } from '../src/styles';
 import type { Template } from '../src/types';
 
 const templates: Template[] = [
@@ -44,5 +45,16 @@ describe('filterTemplates', () => {
 
   it('returns empty array when nothing matches', () => {
     expect(filterTemplates(templates, 'cbme', 'nonexistent')).toHaveLength(0);
+  });
+});
+
+describe('MODAL_CSS — Phase 4', () => {
+  it('contains scope tab styles', () => {
+    expect(MODAL_CSS).toContain('.sc-scope-tabs');
+    expect(MODAL_CSS).toContain('.sc-scope-tab');
+  });
+
+  it('contains footer styles', () => {
+    expect(MODAL_CSS).toContain('.sc-footer');
   });
 });

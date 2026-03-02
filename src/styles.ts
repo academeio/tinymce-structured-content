@@ -145,6 +145,32 @@ export const MODAL_CSS = `
   padding: 40px;
   color: #999;
 }
+.sc-scope-tabs {
+  display: flex;
+  border-bottom: 1px solid #dee2e6;
+  padding: 0 20px;
+}
+.sc-scope-tab {
+  padding: 8px 16px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: #666;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+}
+.sc-scope-tab:hover { color: #333; }
+.sc-scope-tab.active {
+  color: #0d6efd;
+  border-bottom-color: #0d6efd;
+  font-weight: 600;
+}
+.sc-footer {
+  padding: 10px 20px;
+  border-top: 1px solid #dee2e6;
+  text-align: right;
+}
 `;
 
 /** Inject modal CSS into the host page (idempotent) */
