@@ -22,3 +22,13 @@ TinyMCE 7 plugin for structured content templates. Modular TypeScript, bundled v
 ## Design
 
 See ~/Development/eportfolios/docs/plans/01-03-2026-tinymce-structured-content-design.md
+
+## Validation (v0.2.0)
+
+- `validation: 'warn' | 'none'` config option (default `'none'`)
+- `getUnresolvedRequired(doc)` — returns unresolved required fields
+- `isTemplateComplete(doc)` — true when all required fields resolved
+- `highlightUnresolved(doc)` — adds `.tmpl-field-error` class
+- `clearValidationErrors(doc)` — removes error styling
+- `showValidationToast(doc, count)` — notification toast, auto-dismiss 5s
+- In warn mode, `BeforeGetContent` event triggers validation automatically

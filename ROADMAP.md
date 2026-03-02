@@ -14,7 +14,7 @@ MVP feature set:
 
 ---
 
-## Phase 1: Required Field Validation — v0.2.0
+## Phase 1: Required Field Validation — v0.2.0 ✓
 
 **Goal:** Warn or block form submission when required placeholder fields are unfilled.
 
@@ -175,7 +175,7 @@ Extend the `data-field` attribute system:
 
 | Phase | Version | Feature | Complexity | Priority |
 |-------|---------|---------|-----------|----------|
-| 1 | v0.2.0 | Required field validation | Low | **Next** |
+| 1 | v0.2.0 | Required field validation | Low | **Done** |
 | 2 | v0.3.0 | Typed placeholders (date, select, number) | Medium | High |
 | 3 | v0.4.0 | Placeholder linking (auto-fill same fields) | Low-Medium | Medium |
 | 4 | v0.5.0 | Group & personal templates | High | Medium |
