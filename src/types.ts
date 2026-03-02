@@ -27,6 +27,7 @@ export interface StructuredContentConfig {
   variables?: Record<string, string>;
   modalTitle?: string;
   strings?: Record<string, string>;
+  validation?: 'warn' | 'none';
 }
 
 /** Internal representation of a placeholder field in the editor */
