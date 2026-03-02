@@ -37,4 +37,8 @@ export interface PlaceholderField {
   defaultText: string;
   required: boolean;
   resolved: boolean;
+  type: 'text' | 'date' | 'select' | 'number';
+  options?: string[];
+  min?: number;
+  max?: number;
 }
