@@ -22,12 +22,15 @@ export interface FetchResult {
 
 export interface StructuredContentConfig {
   templates?: Template[];
-  fetch?: (query?: string) => Promise<FetchResult>;
+  fetch?: (query?: string, scope?: TemplateScope) => Promise<FetchResult>;
+  onSave?: (template: TemplateDraft, scope: 'personal' | 'group') => Promise<{ id: string }>;
   insertMode?: 'cursor' | 'document' | 'both';
   variables?: Record<string, string>;
   modalTitle?: string;
   strings?: Record<string, string>;
   validation?: 'warn' | 'none';
+  enableAuthoring?: boolean;
+  scopes?: TemplateScope[];
 }
 
 /** Internal representation of a placeholder field in the editor */
@@ -41,4 +44,13 @@ export interface PlaceholderField {
   options?: string[];
   min?: number;
   max?: number;
+}
+
+export type TemplateScope = 'personal' | 'group' | 'site';
+
+export interface TemplateDraft {
+  title: string;
+  description: string;
+  content: string;
+  category: string;
 }
