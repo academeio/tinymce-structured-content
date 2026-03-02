@@ -43,6 +43,16 @@ export function resolveField(field: PlaceholderField): void {
   field.element.removeAttribute('data-required');
 }
 
+/** Return all required fields that have not been resolved */
+export function getUnresolvedRequired(doc: Document): PlaceholderField[] {
+  return findPlaceholderFields(doc).filter((f) => f.required && !f.resolved);
+}
+
+/** Check if all required placeholder fields have been resolved */
+export function isTemplateComplete(doc: Document): boolean {
+  return getUnresolvedRequired(doc).length === 0;
+}
+
 /** Get the next unresolved field after the current one (wraps around) */
 export function getNextField(
   fields: PlaceholderField[],

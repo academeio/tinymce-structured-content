@@ -4,7 +4,9 @@ import {
   findPlaceholderFields,
   resolveField,
   getNextField,
-  getPrevField
+  getPrevField,
+  getUnresolvedRequired,
+  isTemplateComplete
 } from '../src/placeholders';
 
 describe('findPlaceholderFields', () => {
@@ -110,5 +112,89 @@ describe('getNextField / getPrevField', () => {
   it('returns null when all fields are resolved', () => {
     fields.forEach(f => f.resolved = true);
     expect(getNextField(fields, fields[0])).toBeNull();
+  });
+});
+
+describe('getUnresolvedRequired', () => {
+  it('returns only required unresolved fields', () => {
+    const dom = new JSDOM(`
+      <div>
+        <span class="tmpl-field" data-field="date" data-required="true">Enter date</span>
+        <span class="tmpl-field" data-field="notes">Add notes</span>
+        <span class="tmpl-field" data-field="name" data-required="true">Enter name</span>
+      </div>
+    `);
+    const result = getUnresolvedRequired(dom.window.document);
+    expect(result).toHaveLength(2);
+    expect(result[0].name).toBe('date');
+    expect(result[1].name).toBe('name');
+  });
+
+  it('excludes resolved required fields', () => {
+    const dom = new JSDOM(`
+      <div>
+        <span class="tmpl-field" data-field="date" data-required="true">Enter date</span>
+        <span class="tmpl-field" data-field="name" data-required="true">Enter name</span>
+      </div>
+    `);
+    const fields = findPlaceholderFields(dom.window.document);
+    fields[0].element.textContent = 'March 2026';
+    resolveField(fields[0]);
+
+    const result = getUnresolvedRequired(dom.window.document);
+    expect(result).toHaveLength(1);
+    expect(result[0].name).toBe('name');
+  });
+
+  it('returns empty array when no required fields exist', () => {
+    const dom = new JSDOM(`
+      <div>
+        <span class="tmpl-field" data-field="notes">Add notes</span>
+      </div>
+    `);
+    expect(getUnresolvedRequired(dom.window.document)).toHaveLength(0);
+  });
+
+  it('returns empty array when no placeholders exist', () => {
+    const dom = new JSDOM('<div><p>No fields</p></div>');
+    expect(getUnresolvedRequired(dom.window.document)).toHaveLength(0);
+  });
+});
+
+describe('isTemplateComplete', () => {
+  it('returns true when all required fields are resolved', () => {
+    const dom = new JSDOM(`
+      <div>
+        <span class="tmpl-field" data-field="date" data-required="true">Enter date</span>
+      </div>
+    `);
+    const fields = findPlaceholderFields(dom.window.document);
+    fields[0].element.textContent = 'March 2026';
+    resolveField(fields[0]);
+
+    expect(isTemplateComplete(dom.window.document)).toBe(true);
+  });
+
+  it('returns false when required fields are unresolved', () => {
+    const dom = new JSDOM(`
+      <div>
+        <span class="tmpl-field" data-field="date" data-required="true">Enter date</span>
+      </div>
+    `);
+    expect(isTemplateComplete(dom.window.document)).toBe(false);
+  });
+
+  it('returns true when no required fields exist', () => {
+    const dom = new JSDOM(`
+      <div>
+        <span class="tmpl-field" data-field="notes">Add notes</span>
+      </div>
+    `);
+    expect(isTemplateComplete(dom.window.document)).toBe(true);
+  });
+
+  it('returns true when document has no placeholders at all', () => {
+    const dom = new JSDOM('<div><p>Plain text</p></div>');
+    expect(isTemplateComplete(dom.window.document)).toBe(true);
   });
 });
