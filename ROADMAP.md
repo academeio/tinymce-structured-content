@@ -93,7 +93,7 @@ Extend the `data-field` attribute system:
 
 ---
 
-## Phase 3: Placeholder Linking — v0.4.0
+## Phase 3: Placeholder Linking — v0.4.0 ✓
 
 **Goal:** When the same `data-field` name appears multiple times, filling one auto-fills all others.
 
@@ -177,7 +177,7 @@ Extend the `data-field` attribute system:
 |-------|---------|---------|-----------|----------|
 | 1 | v0.2.0 | Required field validation | Low | **Done** |
 | 2 | v0.3.0 | Typed placeholders (date, select, number) | Medium | **Done** |
-| 3 | v0.4.0 | Placeholder linking (auto-fill same fields) | Low-Medium | Medium |
+| 3 | v0.4.0 | Placeholder linking (auto-fill same fields) | Low-Medium | **Done** |
 | 4 | v0.5.0 | Group & personal templates | High | Medium |
 | 5 | v0.6.0 | Template versioning | High | Low |
 | 6 | v1.0.0 | Template analytics | Medium | Low |

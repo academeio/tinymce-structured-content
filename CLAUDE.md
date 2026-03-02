@@ -42,3 +42,11 @@ See ~/Development/eportfolios/docs/plans/01-03-2026-tinymce-structured-content-d
 - `openPopover(doc, field)` / `closePopover(doc)` — widget API
 - Number fields validate range on resolve, show inline error
 - `src/widgets.ts` — popover rendering and styles
+
+## Placeholder Linking (v0.4.0)
+
+- Fields with the same `data-field` name are linked — filling one auto-fills all others
+- First-fill only: after propagation, each field is independent
+- `resolveField(field, fields?)` — optional second param enables linking
+- Linked fields get `data-linked` attribute and green-tinted background
+- `data-linked` is stripped on resolve (along with all other data attributes)
