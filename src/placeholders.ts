@@ -47,13 +47,25 @@ export const PLACEHOLDER_CSS = `
 /** Find all placeholder fields in a document and return metadata */
 export function findPlaceholderFields(doc: Document): PlaceholderField[] {
   const elements = doc.querySelectorAll('.tmpl-field');
-  return Array.from(elements).map((el) => ({
-    element: el as HTMLElement,
-    name: el.getAttribute('data-field') || '',
-    defaultText: (el.textContent || '').trim(),
-    required: el.getAttribute('data-required') === 'true',
-    resolved: false,
-  }));
+  return Array.from(elements).map((el) => {
+    const typeAttr = el.getAttribute('data-type');
+    const type = (typeAttr === 'date' || typeAttr === 'select' || typeAttr === 'number') ? typeAttr : 'text';
+    const optionsAttr = el.getAttribute('data-options');
+    const minAttr = el.getAttribute('data-min');
+    const maxAttr = el.getAttribute('data-max');
+
+    return {
+      element: el as HTMLElement,
+      name: el.getAttribute('data-field') || '',
+      defaultText: (el.textContent || '').trim(),
+      required: el.getAttribute('data-required') === 'true',
+      resolved: false,
+      type,
+      options: optionsAttr ? optionsAttr.split('|') : undefined,
+      min: minAttr !== null ? Number(minAttr) : undefined,
+      max: maxAttr !== null ? Number(maxAttr) : undefined,
+    };
+  });
 }
 
 /** Check if a field's text has changed from its default and strip placeholder markup if so */

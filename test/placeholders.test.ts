@@ -43,7 +43,7 @@ describe('resolveField', () => {
       '<span class="tmpl-field" data-field="date" data-required="true">Enter date</span>'
     );
     const el = dom.window.document.querySelector('.tmpl-field') as HTMLElement;
-    const field = { element: el, name: 'date', defaultText: 'Enter date', required: true, resolved: false };
+    const field = { element: el, name: 'date', defaultText: 'Enter date', required: true, resolved: false, type: 'text' as const };
 
     el.textContent = 'March 2026';
     resolveField(field);
@@ -60,7 +60,7 @@ describe('resolveField', () => {
       '<span class="tmpl-field" data-field="date">Enter date</span>'
     );
     const el = dom.window.document.querySelector('.tmpl-field') as HTMLElement;
-    const field = { element: el, name: 'date', defaultText: 'Enter date', required: false, resolved: false };
+    const field = { element: el, name: 'date', defaultText: 'Enter date', required: false, resolved: false, type: 'text' as const };
 
     resolveField(field);
 
@@ -86,7 +86,8 @@ describe('getNextField / getPrevField', () => {
       name: ['a', 'b', 'c'][i],
       defaultText: ['A', 'B', 'C'][i],
       required: false,
-      resolved: false
+      resolved: false,
+      type: 'text' as const
     }));
   });
 
@@ -302,5 +303,54 @@ describe('showValidationToast', () => {
     const toasts = dom.window.document.querySelectorAll('.sc-validation-toast');
     expect(toasts).toHaveLength(1);
     expect(toasts[0].textContent).toBe('1 required field(s) need to be filled');
+  });
+});
+
+describe('findPlaceholderFields — typed fields', () => {
+  it('parses data-type attribute, defaults to text', () => {
+    const dom = new JSDOM(`
+      <div>
+        <span class="tmpl-field" data-field="date" data-type="date">Select date</span>
+        <span class="tmpl-field" data-field="notes">Add notes</span>
+      </div>
+    `);
+    const fields = findPlaceholderFields(dom.window.document);
+    expect(fields[0].type).toBe('date');
+    expect(fields[1].type).toBe('text');
+  });
+
+  it('parses data-options for select type', () => {
+    const dom = new JSDOM(`
+      <div>
+        <span class="tmpl-field" data-field="level" data-type="select" data-options="Direct|Indirect|Distant">Level</span>
+      </div>
+    `);
+    const fields = findPlaceholderFields(dom.window.document);
+    expect(fields[0].type).toBe('select');
+    expect(fields[0].options).toEqual(['Direct', 'Indirect', 'Distant']);
+  });
+
+  it('parses data-min and data-max for number type', () => {
+    const dom = new JSDOM(`
+      <div>
+        <span class="tmpl-field" data-field="score" data-type="number" data-min="1" data-max="5">Score</span>
+      </div>
+    `);
+    const fields = findPlaceholderFields(dom.window.document);
+    expect(fields[0].type).toBe('number');
+    expect(fields[0].min).toBe(1);
+    expect(fields[0].max).toBe(5);
+  });
+
+  it('leaves options/min/max undefined when not present', () => {
+    const dom = new JSDOM(`
+      <div>
+        <span class="tmpl-field" data-field="notes" data-type="text">Notes</span>
+      </div>
+    `);
+    const fields = findPlaceholderFields(dom.window.document);
+    expect(fields[0].options).toBeUndefined();
+    expect(fields[0].min).toBeUndefined();
+    expect(fields[0].max).toBeUndefined();
   });
 });
