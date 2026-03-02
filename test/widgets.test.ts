@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { JSDOM } from 'jsdom';
 import { openPopover, closePopover, injectWidgetStyles, WIDGET_CSS } from '../src/widgets';
+import { resolveField } from '../src/placeholders';
 import type { PlaceholderField } from '../src/types';
 
 describe('WIDGET_CSS', () => {
@@ -67,7 +68,7 @@ describe('openPopover — date', () => {
   });
 
   it('creates a popover with a date input', () => {
-    openPopover(dom.window.document, field);
+    openPopover(dom.window.document, field, resolveField);
     const popover = dom.window.document.querySelector('.sc-popover');
     expect(popover).not.toBeNull();
     const input = popover!.querySelector('input[type="date"]');
@@ -75,13 +76,13 @@ describe('openPopover — date', () => {
   });
 
   it('replaces existing popover (only one at a time)', () => {
-    openPopover(dom.window.document, field);
-    openPopover(dom.window.document, field);
+    openPopover(dom.window.document, field, resolveField);
+    openPopover(dom.window.document, field, resolveField);
     expect(dom.window.document.querySelectorAll('.sc-popover')).toHaveLength(1);
   });
 
   it('updates field text and resolves on value change', () => {
-    openPopover(dom.window.document, field);
+    openPopover(dom.window.document, field, resolveField);
     const input = dom.window.document.querySelector('.sc-popover input[type="date"]') as HTMLInputElement;
     input.value = '2026-03-15';
     input.dispatchEvent(new dom.window.Event('change'));
@@ -107,13 +108,13 @@ describe('openPopover — select', () => {
   });
 
   it('creates a popover with a select element', () => {
-    openPopover(dom.window.document, field);
+    openPopover(dom.window.document, field, resolveField);
     const select = dom.window.document.querySelector('.sc-popover select');
     expect(select).not.toBeNull();
   });
 
   it('renders all options plus a placeholder', () => {
-    openPopover(dom.window.document, field);
+    openPopover(dom.window.document, field, resolveField);
     const options = dom.window.document.querySelectorAll('.sc-popover select option');
     // First option is the placeholder "Choose..."
     expect(options).toHaveLength(4);
@@ -125,7 +126,7 @@ describe('openPopover — select', () => {
   });
 
   it('updates field text and resolves on selection', () => {
-    openPopover(dom.window.document, field);
+    openPopover(dom.window.document, field, resolveField);
     const select = dom.window.document.querySelector('.sc-popover select') as HTMLSelectElement;
     select.value = 'Indirect';
     select.dispatchEvent(new dom.window.Event('change'));
@@ -150,7 +151,7 @@ describe('openPopover — number', () => {
   });
 
   it('creates a popover with a number input', () => {
-    openPopover(dom.window.document, field);
+    openPopover(dom.window.document, field, resolveField);
     const input = dom.window.document.querySelector('.sc-popover input[type="number"]') as HTMLInputElement;
     expect(input).not.toBeNull();
     expect(input.min).toBe('1');
@@ -158,7 +159,7 @@ describe('openPopover — number', () => {
   });
 
   it('resolves field with valid value on change', () => {
-    openPopover(dom.window.document, field);
+    openPopover(dom.window.document, field, resolveField);
     const input = dom.window.document.querySelector('.sc-popover input[type="number"]') as HTMLInputElement;
     input.value = '3';
     input.dispatchEvent(new dom.window.Event('change'));
@@ -169,7 +170,7 @@ describe('openPopover — number', () => {
   });
 
   it('shows error for out-of-range value', () => {
-    openPopover(dom.window.document, field);
+    openPopover(dom.window.document, field, resolveField);
     const input = dom.window.document.querySelector('.sc-popover input[type="number"]') as HTMLInputElement;
     input.value = '10';
     input.dispatchEvent(new dom.window.Event('change'));
@@ -186,7 +187,7 @@ describe('openPopover — number', () => {
 
   it('works without min/max constraints', () => {
     field = makeField(dom, '<span class="tmpl-field" data-field="count" data-type="number">Count</span>');
-    openPopover(dom.window.document, field);
+    openPopover(dom.window.document, field, resolveField);
     const input = dom.window.document.querySelector('.sc-popover input[type="number"]') as HTMLInputElement;
     input.value = '999';
     input.dispatchEvent(new dom.window.Event('change'));

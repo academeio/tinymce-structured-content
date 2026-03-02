@@ -1,5 +1,4 @@
 import type { PlaceholderField } from './types';
-import { resolveField } from './placeholders';
 
 /** CSS for widget popovers — injected into the host page */
 export const WIDGET_CSS = `
@@ -44,7 +43,7 @@ export function closePopover(doc: Document): void {
 }
 
 /** Open a typed popover for a placeholder field */
-export function openPopover(doc: Document, field: PlaceholderField): void {
+export function openPopover(doc: Document, field: PlaceholderField, resolve: (f: PlaceholderField) => void): void {
   closePopover(doc);
   injectWidgetStyles(doc);
 
@@ -56,7 +55,7 @@ export function openPopover(doc: Document, field: PlaceholderField): void {
   popover.style.top = `${rect.bottom + 4}px`;
   popover.style.left = `${rect.left}px`;
 
-  const content = createInput(doc, field, popover);
+  const content = createInput(doc, field, popover, resolve);
   popover.appendChild(content);
   doc.body.appendChild(popover);
 
@@ -84,33 +83,33 @@ export function openPopover(doc: Document, field: PlaceholderField): void {
   setTimeout(() => doc.addEventListener('mousedown', clickHandler), 0);
 }
 
-function createInput(doc: Document, field: PlaceholderField, popover: HTMLElement): HTMLElement {
+function createInput(doc: Document, field: PlaceholderField, popover: HTMLElement, resolve: (f: PlaceholderField) => void): HTMLElement {
   switch (field.type) {
     case 'date':
-      return createDateInput(doc, field, popover);
+      return createDateInput(doc, field, popover, resolve);
     case 'select':
-      return createSelectInput(doc, field, popover);
+      return createSelectInput(doc, field, popover, resolve);
     case 'number':
-      return createNumberInput(doc, field, popover);
+      return createNumberInput(doc, field, popover, resolve);
     default:
       return doc.createElement('span');
   }
 }
 
-function createDateInput(doc: Document, field: PlaceholderField, popover: HTMLElement): HTMLElement {
+function createDateInput(doc: Document, field: PlaceholderField, popover: HTMLElement, resolve: (f: PlaceholderField) => void): HTMLElement {
   const input = doc.createElement('input');
   input.type = 'date';
   input.addEventListener('change', () => {
     if (input.value) {
       field.element.textContent = input.value;
-      resolveField(field);
+      resolve(field);
       closePopover(doc);
     }
   });
   return input;
 }
 
-function createSelectInput(doc: Document, field: PlaceholderField, popover: HTMLElement): HTMLElement {
+function createSelectInput(doc: Document, field: PlaceholderField, popover: HTMLElement, resolve: (f: PlaceholderField) => void): HTMLElement {
   const select = doc.createElement('select');
 
   // Placeholder option
@@ -130,7 +129,7 @@ function createSelectInput(doc: Document, field: PlaceholderField, popover: HTML
   select.addEventListener('change', () => {
     if (select.value) {
       field.element.textContent = select.value;
-      resolveField(field);
+      resolve(field);
       closePopover(doc);
     }
   });
@@ -138,7 +137,7 @@ function createSelectInput(doc: Document, field: PlaceholderField, popover: HTML
   return select;
 }
 
-function createNumberInput(doc: Document, field: PlaceholderField, popover: HTMLElement): HTMLElement {
+function createNumberInput(doc: Document, field: PlaceholderField, popover: HTMLElement, resolve: (f: PlaceholderField) => void): HTMLElement {
   const wrapper = doc.createElement('div');
 
   const input = doc.createElement('input');
@@ -166,7 +165,7 @@ function createNumberInput(doc: Document, field: PlaceholderField, popover: HTML
     }
 
     field.element.textContent = input.value;
-    resolveField(field);
+    resolve(field);
     closePopover(doc);
   });
 

@@ -238,7 +238,7 @@ export function activatePlaceholders(editor: any, config?: StructuredContentConf
   fields.forEach((field) => {
     if (field.type !== 'text') {
       field.element.addEventListener('click', () => {
-        openPopover(document, field);
+        openPopover(document, field, resolveField);
       });
     }
   });
