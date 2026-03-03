@@ -6,10 +6,10 @@ import { fireSubmissionEvent } from './analytics';
 declare const tinymce: any;
 
 tinymce.PluginManager.add('structuredcontent', (editor: any) => {
-  const config: StructuredContentConfig = editor.options.get('structuredcontent') || {};
-
-  // Register option so TinyMCE knows about our config key
+  // Register option first so TinyMCE recognises the config key before we read it
   editor.options.register('structuredcontent', { processor: 'object', default: {} });
+
+  const config: StructuredContentConfig = editor.options.get('structuredcontent') || {};
 
   // Toolbar button
   editor.ui.registry.addButton('structuredcontent', {
