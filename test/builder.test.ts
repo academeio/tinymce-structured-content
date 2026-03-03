@@ -1,8 +1,12 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { JSDOM } from 'jsdom';
-import { autoSlug, createBlock, modelToHTML } from '../src/builder';
+import { autoSlug, createBlock, modelToHTML, resetBlockCounter } from '../src/builder';
 import { BUILDER_CSS, injectBuilderStyles } from '../src/builder-styles';
 import type { HeadingBlock, ParagraphBlock, TextFieldBlock, DateFieldBlock, SelectFieldBlock, NumberFieldBlock, TemplateBlock } from '../src/types';
+
+beforeEach(() => {
+  resetBlockCounter();
+});
 
 describe('autoSlug', () => {
   it('converts label to snake_case', () => {

@@ -1,7 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { JSDOM } from 'jsdom';
 import { renderBuilder } from '../src/builder-ui';
+import { resetBlockCounter } from '../src/builder';
 import type { TemplateBlock } from '../src/types';
+
+beforeEach(() => {
+  resetBlockCounter();
+});
 
 function setup() {
   const dom = new JSDOM('<!DOCTYPE html><html><head></head><body></body></html>');

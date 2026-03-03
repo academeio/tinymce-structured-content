@@ -8,6 +8,11 @@ function nextId(): string {
   return `blk_${++blockCounter}`;
 }
 
+/** Reset the block ID counter (for test isolation) */
+export function resetBlockCounter(): void {
+  blockCounter = 0;
+}
+
 /** Convert a label string to a snake_case field name */
 export function autoSlug(label: string): string {
   return label
