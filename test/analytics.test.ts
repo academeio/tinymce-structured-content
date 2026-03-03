@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { JSDOM } from 'jsdom';
-import { getTemplateMetrics, fireInsertionEvent } from '../src/analytics';
+import { getTemplateMetrics, fireInsertionEvent, fireSubmissionEvent } from '../src/analytics';
 
 describe('getTemplateMetrics', () => {
   function makeEditor(bodyHtml: string) {
@@ -124,5 +124,62 @@ describe('fireInsertionEvent', () => {
 
     expect(received.templateVersion).toBeUndefined();
     expect(received.insertionMode).toBe('document');
+  });
+});
+
+describe('fireSubmissionEvent', () => {
+  function makeEditor(bodyHtml: string) {
+    const dom = new JSDOM(`<!DOCTYPE html><html><head></head><body>${bodyHtml}</body></html>`);
+    return {
+      dom,
+      getDoc: () => dom.window.document,
+    };
+  }
+
+  it('calls onAnalyticsEvent with TemplateSubmittedEvent and metrics', () => {
+    const editor = makeEditor(
+      '<div class="sc-template" data-template-id="tpl-1" data-template-version="v3" data-template-title="Clinical Encounter">' +
+        '<span class="tmpl-field" data-field="date" data-required="true" data-type="date">Enter date</span>' +
+        '<span class="tmpl-field" data-field="notes" data-type="text">Add notes</span>' +
+      '</div>'
+    );
+
+    let received: any = null;
+    const config: any = {
+      onAnalyticsEvent: (event: any) => { received = event; },
+    };
+
+    fireSubmissionEvent(editor, config);
+
+    expect(received).not.toBeNull();
+    expect(received.type).toBe('template_submitted');
+    expect(received.templateId).toBe('tpl-1');
+    expect(received.templateVersion).toBe('v3');
+    expect(received.templateTitle).toBe('Clinical Encounter');
+    expect(typeof received.timestamp).toBe('number');
+    expect(received.metrics.totalFields).toBe(2);
+    expect(received.metrics.requiredFields).toBe(1);
+    expect(received.metrics.resolvedFields).toBe(0);
+    expect(received.metrics.unresolvedRequired).toBe(1);
+    expect(received.metrics.completionPercentage).toBe(0);
+    expect(received.metrics.fieldBreakdown).toHaveLength(2);
+  });
+
+  it('is a no-op when no sc-template in editor', () => {
+    const editor = makeEditor('<p>Plain content</p>');
+    let called = false;
+    const config: any = {
+      onAnalyticsEvent: () => { called = true; },
+    };
+
+    fireSubmissionEvent(editor, config);
+    expect(called).toBe(false);
+  });
+
+  it('is a no-op when onAnalyticsEvent not configured', () => {
+    const editor = makeEditor(
+      '<div class="sc-template" data-template-id="tpl-1"><p>Content</p></div>'
+    );
+    expect(() => fireSubmissionEvent(editor, {})).not.toThrow();
   });
 });

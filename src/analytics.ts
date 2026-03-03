@@ -71,3 +71,32 @@ export function fireInsertionEvent(
 
   config.onAnalyticsEvent(event);
 }
+
+/**
+ * Fire a template_submitted analytics event.
+ * Called from plugin.ts in BeforeGetContent handler.
+ */
+export function fireSubmissionEvent(
+  editor: any,
+  config: StructuredContentConfig
+): void {
+  if (!config.onAnalyticsEvent) return;
+
+  const doc: Document = editor.getDoc();
+  const wrapper = doc.querySelector('.sc-template[data-template-id]');
+  if (!wrapper) return;
+
+  const metrics = getTemplateMetrics(editor);
+  if (!metrics) return;
+
+  const event: TemplateSubmittedEvent = {
+    type: 'template_submitted',
+    templateId: wrapper.getAttribute('data-template-id')!,
+    templateTitle: wrapper.getAttribute('data-template-title') || '',
+    templateVersion: wrapper.getAttribute('data-template-version') || undefined,
+    timestamp: Date.now(),
+    metrics,
+  };
+
+  config.onAnalyticsEvent(event);
+}
