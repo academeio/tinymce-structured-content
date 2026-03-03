@@ -7,6 +7,7 @@ export interface Template {
   content: string;
   category?: string;
   thumbnail?: string;
+  version?: string;
 }
 
 export interface Category {
@@ -31,6 +32,7 @@ export interface StructuredContentConfig {
   validation?: 'warn' | 'none';
   enableAuthoring?: boolean;
   scopes?: TemplateScope[];
+  checkVersion?: (templateId: string, currentVersion: string) => Promise<VersionCheckResult | null>;
 }
 
 /** Internal representation of a placeholder field in the editor */
@@ -53,4 +55,9 @@ export interface TemplateDraft {
   description: string;
   content: string;
   category: string;
+}
+
+export interface VersionCheckResult {
+  latestVersion: string;
+  latestTemplate: Template;
 }
