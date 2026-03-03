@@ -78,6 +78,12 @@ describe('insertTemplate', () => {
     expect(editor._content).toContain('data-template-id="tpl-1"');
   });
 
+  it('stamps data-template-title when templateTitle is provided (cursor mode)', () => {
+    const editor = mockEditor();
+    insertTemplate(editor, '<p>Hello</p>', 'tpl-1', 'cursor', {}, 'v2.1', 'Clinical Encounter');
+    expect(editor._content).toContain('data-template-title="Clinical Encounter"');
+  });
+
   it('does not stamp version when not provided (backward compat)', () => {
     const editor = mockEditor();
     insertTemplate(editor, '<p>Hello</p>', 'tpl-1', 'cursor', {});

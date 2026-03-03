@@ -28,7 +28,8 @@ export function insertTemplate(
   templateId: string,
   mode: 'cursor' | 'document',
   config: StructuredContentConfig,
-  templateVersion?: string
+  templateVersion?: string,
+  templateTitle?: string
 ): void {
   const processed = replaceVariables(html, config.variables);
 
@@ -40,7 +41,11 @@ export function insertTemplate(
       if (templateVersion) {
         versionAttr = ` data-template-version="${escapeHtml(templateVersion)}"`;
       }
-      const wrapped = `<div class="sc-template" data-template-id="${escapeHtml(templateId)}"${versionAttr}>${processed}</div>`;
+      let titleAttr = '';
+      if (templateTitle) {
+        titleAttr = ` data-template-title="${escapeHtml(templateTitle)}"`;
+      }
+      const wrapped = `<div class="sc-template" data-template-id="${escapeHtml(templateId)}"${versionAttr}${titleAttr}>${processed}</div>`;
       editor.insertContent(wrapped);
     }
   });

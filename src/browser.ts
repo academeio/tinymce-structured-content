@@ -2,6 +2,7 @@ import type { Template, Category, StructuredContentConfig } from './types';
 import { injectModalStyles } from './styles';
 import { insertTemplate } from './insertion';
 import { activatePlaceholders } from './placeholders';
+import { fireInsertionEvent } from './analytics';
 import { openAuthoring } from './authoring';
 
 /** Filter templates by category and search term */
@@ -403,8 +404,9 @@ function renderModal(
       }
     }
 
-    insertTemplate(editor, selectedTemplate.content, selectedTemplate.id, mode, config, selectedTemplate.version);
+    insertTemplate(editor, selectedTemplate.content, selectedTemplate.id, mode, config, selectedTemplate.version, selectedTemplate.title);
     closeBrowser();
     activatePlaceholders(editor, config);
+    fireInsertionEvent(editor, config, selectedTemplate, mode);
   }
 }
