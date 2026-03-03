@@ -7,7 +7,9 @@ import {
   dismissVersionBanner,
   checkForUpdates,
   extractFieldValues,
+  migrateTemplate,
 } from '../src/versioning';
+import type { VersionCheckResult } from '../src/types';
 
 describe('VERSIONING_CSS', () => {
   it('contains version banner styles', () => {
@@ -219,5 +221,138 @@ describe('checkForUpdates', () => {
     await checkForUpdates(editor, config);
     const banner = editor.dom.window.document.querySelector('.sc-version-banner');
     expect(banner).toBeNull();
+  });
+});
+
+describe('migrateTemplate', () => {
+  function makeMigrationEditor(bodyHtml: string) {
+    const dom = new JSDOM(`<!DOCTYPE html><html><head></head><body>${bodyHtml}</body></html>`, {
+      url: 'http://localhost',
+    });
+    return {
+      dom,
+      getDoc: () => dom.window.document,
+      selection: { select: () => {} },
+      on: () => {},
+      undoManager: { transact: (fn: () => void) => fn() },
+    };
+  }
+
+  it('replaces wrapper content with new template', () => {
+    const editor = makeMigrationEditor(
+      '<div class="sc-version-banner"></div>' +
+      '<div class="sc-template" data-template-id="tpl-1" data-template-version="v1">' +
+        '<span class="tmpl-field" data-field="date">Enter date</span>' +
+      '</div>'
+    );
+    const wrapper = editor.dom.window.document.querySelector('.sc-template') as HTMLElement;
+    const result: VersionCheckResult = {
+      latestVersion: 'v2',
+      latestTemplate: {
+        id: 'tpl-1',
+        title: 'Updated',
+        content: '<p>New content</p><span class="tmpl-field" data-field="date">Enter date</span>',
+        version: 'v2',
+      },
+    };
+
+    migrateTemplate(editor, {}, wrapper, result);
+
+    expect(wrapper.innerHTML).toContain('New content');
+    expect(wrapper.getAttribute('data-template-version')).toBe('v2');
+  });
+
+  it('carries over unresolved field values by name', () => {
+    const editor = makeMigrationEditor(
+      '<div class="sc-template" data-template-id="tpl-1" data-template-version="v1">' +
+        '<span class="tmpl-field" data-field="date" data-required="true" data-default="Enter date">Enter date</span>' +
+        '<span class="tmpl-field" data-field="notes" data-default="Add notes">Add notes</span>' +
+      '</div>'
+    );
+    // Simulate user typing into the date field
+    const dateField = editor.dom.window.document.querySelector('[data-field="date"]') as HTMLElement;
+    dateField.textContent = 'March 2026';
+
+    const wrapper = editor.dom.window.document.querySelector('.sc-template') as HTMLElement;
+    const result: VersionCheckResult = {
+      latestVersion: 'v2',
+      latestTemplate: {
+        id: 'tpl-1',
+        title: 'Updated',
+        content:
+          '<span class="tmpl-field" data-field="date" data-required="true">Enter date</span>' +
+          '<span class="tmpl-field" data-field="summary">Enter summary</span>',
+        version: 'v2',
+      },
+    };
+
+    migrateTemplate(editor, {}, wrapper, result);
+
+    // date field should have the old value
+    const newDateField = editor.dom.window.document.querySelector('[data-field="date"]') as HTMLElement;
+    expect(newDateField.textContent).toBe('March 2026');
+
+    // summary is a new field — should have its default text
+    const summaryField = editor.dom.window.document.querySelector('[data-field="summary"]') as HTMLElement;
+    expect(summaryField.textContent).toBe('Enter summary');
+  });
+
+  it('ignores old fields not present in new template', () => {
+    const editor = makeMigrationEditor(
+      '<div class="sc-template" data-template-id="tpl-1" data-template-version="v1">' +
+        '<span class="tmpl-field" data-field="old_field" data-default="Old value">Old value</span>' +
+      '</div>'
+    );
+    const oldField = editor.dom.window.document.querySelector('[data-field="old_field"]') as HTMLElement;
+    oldField.textContent = 'User typed this';
+
+    const wrapper = editor.dom.window.document.querySelector('.sc-template') as HTMLElement;
+    const result: VersionCheckResult = {
+      latestVersion: 'v2',
+      latestTemplate: {
+        id: 'tpl-1',
+        title: 'Updated',
+        content: '<span class="tmpl-field" data-field="new_field">Enter new field</span>',
+        version: 'v2',
+      },
+    };
+
+    migrateTemplate(editor, {}, wrapper, result);
+
+    // old_field should be gone, new_field should have default
+    expect(editor.dom.window.document.querySelector('[data-field="old_field"]')).toBeNull();
+    const newField = editor.dom.window.document.querySelector('[data-field="new_field"]') as HTMLElement;
+    expect(newField.textContent).toBe('Enter new field');
+  });
+
+  it('updates data-template-version attribute', () => {
+    const editor = makeMigrationEditor(
+      '<div class="sc-template" data-template-id="tpl-1" data-template-version="v1">' +
+        '<p>Old</p>' +
+      '</div>'
+    );
+    const wrapper = editor.dom.window.document.querySelector('.sc-template') as HTMLElement;
+    const result: VersionCheckResult = {
+      latestVersion: 'v3',
+      latestTemplate: { id: 'tpl-1', title: 'Updated', content: '<p>New</p>', version: 'v3' },
+    };
+
+    migrateTemplate(editor, {}, wrapper, result);
+    expect(wrapper.getAttribute('data-template-version')).toBe('v3');
+  });
+
+  it('dismisses the version banner after migration', () => {
+    const editor = makeMigrationEditor(
+      '<div class="sc-version-banner">Banner</div>' +
+      '<div class="sc-template" data-template-id="tpl-1" data-template-version="v1"><p>Old</p></div>'
+    );
+    const wrapper = editor.dom.window.document.querySelector('.sc-template') as HTMLElement;
+    const result: VersionCheckResult = {
+      latestVersion: 'v2',
+      latestTemplate: { id: 'tpl-1', title: 'Updated', content: '<p>New</p>', version: 'v2' },
+    };
+
+    migrateTemplate(editor, {}, wrapper, result);
+    expect(editor.dom.window.document.querySelector('.sc-version-banner')).toBeNull();
   });
 });

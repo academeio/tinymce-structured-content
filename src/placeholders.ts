@@ -206,10 +206,19 @@ export function showValidationToast(doc: Document, count: number): void {
 export function activatePlaceholders(editor: any, config?: StructuredContentConfig): void {
   const doc: Document = editor.getDoc();
   injectPlaceholderStyles(doc);
-  injectWidgetStyles(document);
+  if (typeof document !== 'undefined') {
+    injectWidgetStyles(document);
+  }
 
   const fields = findPlaceholderFields(doc);
   if (fields.length === 0) return;
+
+  // Stamp data-default on each field so extractFieldValues can compare later
+  fields.forEach((f) => {
+    if (!f.element.getAttribute('data-default')) {
+      f.element.setAttribute('data-default', (f.element.textContent || '').trim());
+    }
+  });
 
   // Mark linked fields (same data-field name appears 2+ times)
   const nameCounts = new Map<string, number>();

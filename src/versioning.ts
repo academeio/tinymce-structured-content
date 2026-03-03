@@ -137,12 +137,36 @@ export async function checkForUpdates(editor: any, config: StructuredContentConf
   );
 }
 
-/** Migrate the editor content to the latest template version (implementation in Task 5) */
+/** Migrate the editor content to the latest template version */
 export function migrateTemplate(
   editor: any,
   config: StructuredContentConfig,
   wrapper: HTMLElement,
   result: VersionCheckResult
 ): void {
-  // Stub — full implementation in Task 5
+  const doc: Document = wrapper.ownerDocument;
+
+  // 1. Extract unresolved field values by name
+  const values = extractFieldValues(doc);
+
+  // 2. Replace content and update version
+  wrapper.innerHTML = result.latestTemplate.content;
+  wrapper.setAttribute('data-template-version', result.latestVersion);
+
+  // 3. Map old values to matching fields in new template
+  const newFields = findPlaceholderFields(doc);
+  newFields.forEach((field) => {
+    const oldValue = values.get(field.name);
+    if (oldValue) {
+      field.element.textContent = oldValue;
+    }
+  });
+
+  // 4. Dismiss banner
+  dismissVersionBanner(doc);
+
+  // 5. Activate placeholders on new content (if editor has full TinyMCE API)
+  if (editor.on && editor.selection) {
+    activatePlaceholders(editor, config);
+  }
 }
