@@ -133,7 +133,7 @@ Extend the `data-field` attribute system:
 
 ---
 
-## Phase 5: Template Versioning — v0.6.0
+## Phase 5: Template Versioning — v0.6.0 ✓
 
 **Goal:** Track template changes over time and handle documents created from older versions.
 
@@ -179,7 +179,7 @@ Extend the `data-field` attribute system:
 | 2 | v0.3.0 | Typed placeholders (date, select, number) | Medium | **Done** |
 | 3 | v0.4.0 | Placeholder linking (auto-fill same fields) | Low-Medium | **Done** |
 | 4 | v0.5.0 | Group & personal templates | High | **Done** |
-| 5 | v0.6.0 | Template versioning | High | Low |
+| 5 | v0.6.0 | Template versioning | High | **Done** |
 | 6 | v1.0.0 | Template analytics | Medium | Low |
 
 ## How to Start a Phase

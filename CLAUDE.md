@@ -62,3 +62,14 @@ See ~/Development/eportfolios/docs/plans/01-03-2026-tinymce-structured-content-d
 - `buildPlaceholderSpan(name, type, required, options?, min?, max?)` — generates tmpl-field HTML
 - `src/authoring.ts` — authoring modal module
 - `src/authoring-styles.ts` — authoring CSS
+
+## Template Versioning (v0.6.0)
+
+- `Template.version?: string` — host-provided version identifier
+- `data-template-version` attribute stamped on cursor-mode insertions
+- `checkVersion(templateId, currentVersion)` — callback to check for updates
+- `VersionCheckResult` — `{ latestVersion, latestTemplate }` returned by callback
+- Auto-checks on content load (`SetContent` event, once per session)
+- Info banner: "A newer version is available" with Update / Dismiss
+- Migration: replaces content, maps unresolved field values by `data-field` name
+- `src/versioning.ts` — version check, banner, migration module
