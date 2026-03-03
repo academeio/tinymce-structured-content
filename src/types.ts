@@ -33,6 +33,7 @@ export interface StructuredContentConfig {
   enableAuthoring?: boolean;
   scopes?: TemplateScope[];
   checkVersion?: (templateId: string, currentVersion: string) => Promise<VersionCheckResult | null>;
+  onAnalyticsEvent?: (event: AnalyticsEvent) => void;
 }
 
 /** Internal representation of a placeholder field in the editor */
@@ -60,4 +61,42 @@ export interface TemplateDraft {
 export interface VersionCheckResult {
   latestVersion: string;
   latestTemplate: Template;
+}
+
+export type AnalyticsEventType = 'template_inserted' | 'template_submitted';
+
+export interface AnalyticsEvent {
+  type: AnalyticsEventType;
+  templateId: string;
+  templateTitle: string;
+  templateVersion?: string;
+  timestamp: number;
+}
+
+export interface TemplateInsertedEvent extends AnalyticsEvent {
+  type: 'template_inserted';
+  insertionMode: 'cursor' | 'document';
+  fieldCount: number;
+  requiredFieldCount: number;
+}
+
+export interface TemplateMetrics {
+  totalFields: number;
+  requiredFields: number;
+  resolvedFields: number;
+  unresolvedRequired: number;
+  completionPercentage: number;
+  fieldBreakdown: FieldMetric[];
+}
+
+export interface FieldMetric {
+  name: string;
+  type: 'text' | 'date' | 'select' | 'number';
+  required: boolean;
+  resolved: boolean;
+}
+
+export interface TemplateSubmittedEvent extends AnalyticsEvent {
+  type: 'template_submitted';
+  metrics: TemplateMetrics;
 }
