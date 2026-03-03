@@ -1,6 +1,7 @@
 import type { StructuredContentConfig } from './types';
 import { openBrowser } from './browser';
 import { checkForUpdates } from './versioning';
+import { fireSubmissionEvent } from './analytics';
 
 declare const tinymce: any;
 
@@ -30,5 +31,10 @@ tinymce.PluginManager.add('structuredcontent', (editor: any) => {
     if (versionChecked) return;
     versionChecked = true;
     checkForUpdates(editor, config).catch(() => {});
+  });
+
+  // Fire analytics event on content extraction
+  editor.on('BeforeGetContent', () => {
+    fireSubmissionEvent(editor, config);
   });
 });
