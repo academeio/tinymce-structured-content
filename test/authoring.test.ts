@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { JSDOM } from 'jsdom';
 import { AUTHORING_CSS, injectAuthoringStyles } from '../src/authoring-styles';
-import { buildPlaceholderSpan } from '../src/authoring';
+import { buildPlaceholderSpan, openAuthoring, closeAuthoring } from '../src/authoring';
 
 describe('AUTHORING_CSS', () => {
   it('contains authoring modal styles', () => {
@@ -66,5 +66,26 @@ describe('buildPlaceholderSpan', () => {
   it('omits options when type is not select', () => {
     const html = buildPlaceholderSpan('name', 'text', false, 'A|B|C');
     expect(html).not.toContain('data-options');
+  });
+});
+
+describe('openAuthoring with builder', () => {
+  it('renders builder palette instead of TinyMCE', () => {
+    const dom = new JSDOM('<!DOCTYPE html><html><head></head><body></body></html>');
+    const doc = dom.window.document;
+
+    const origDoc = globalThis.document;
+    (globalThis as any).document = doc;
+
+    try {
+      openAuthoring({ enableAuthoring: true }, [{ id: 'general', label: 'General' }]);
+      const overlay = doc.getElementById('sc-authoring-overlay');
+      expect(overlay).not.toBeNull();
+      // Should have builder palette, not TinyMCE textarea
+      expect(overlay!.querySelector('.sc-builder-palette')).not.toBeNull();
+      expect(overlay!.querySelector('#sc-authoring-textarea')).toBeNull();
+    } finally {
+      (globalThis as any).document = origDoc;
+    }
   });
 });

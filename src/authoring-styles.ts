@@ -66,9 +66,9 @@ export const AUTHORING_CSS = `
 }
 .sc-authoring-meta textarea { resize: vertical; min-height: 60px; }
 .sc-authoring-editor {
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  min-height: 250px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
 }
 .sc-authoring-preview {
   padding: 15px 20px;

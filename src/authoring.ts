@@ -1,8 +1,8 @@
-import type { StructuredContentConfig, Category, TemplateDraft } from './types';
+import type { StructuredContentConfig, Category, TemplateDraft, TemplateBlock } from './types';
 import { injectAuthoringStyles } from './authoring-styles';
 import { PLACEHOLDER_CSS } from './placeholders';
-
-declare const tinymce: any;
+import { renderBuilder } from './builder-ui';
+import { modelToHTML } from './builder';
 
 /**
  * Build an HTML span for a placeholder field.
@@ -29,7 +29,8 @@ export function buildPlaceholderSpan(
 export function openAuthoring(config: StructuredContentConfig, categories: Category[]): void {
   injectAuthoringStyles(document);
 
-  let authoringEditor: any = null;
+  let currentBlocks: TemplateBlock[] = [];
+  let debounceTimer: ReturnType<typeof setTimeout>;
 
   // -- Overlay --
   const overlay = document.createElement('div');
@@ -51,10 +52,7 @@ export function openAuthoring(config: StructuredContentConfig, categories: Categ
   closeBtn.className = 'sc-close';
   closeBtn.setAttribute('aria-label', 'Close');
   closeBtn.innerHTML = '&times;';
-  closeBtn.addEventListener('click', () => {
-    cleanupEditor();
-    closeAuthoring();
-  });
+  closeBtn.addEventListener('click', closeAuthoring);
   header.appendChild(h3);
   header.appendChild(closeBtn);
 
@@ -62,7 +60,7 @@ export function openAuthoring(config: StructuredContentConfig, categories: Categ
   const body = document.createElement('div');
   body.className = 'sc-authoring-body';
 
-  // Left pane: metadata + editor
+  // Left pane: metadata + builder
   const left = document.createElement('div');
   left.className = 'sc-authoring-left';
 
@@ -102,15 +100,12 @@ export function openAuthoring(config: StructuredContentConfig, categories: Categ
   meta.appendChild(catLabel);
   meta.appendChild(catSelect);
 
-  // Editor area
-  const editorDiv = document.createElement('div');
-  editorDiv.className = 'sc-authoring-editor';
-  const textarea = document.createElement('textarea');
-  textarea.id = 'sc-authoring-textarea';
-  editorDiv.appendChild(textarea);
+  // Builder area (replaces TinyMCE)
+  const builderDiv = document.createElement('div');
+  builderDiv.className = 'sc-authoring-editor';
 
   left.appendChild(meta);
-  left.appendChild(editorDiv);
+  left.appendChild(builderDiv);
 
   // Right pane: live preview
   const right = document.createElement('div');
@@ -123,7 +118,6 @@ export function openAuthoring(config: StructuredContentConfig, categories: Categ
   const previewContent = document.createElement('div');
   previewContent.className = 'sc-authoring-preview-content';
 
-  // Inject placeholder CSS into preview for field styling
   const previewStyle = document.createElement('style');
   previewStyle.textContent = PLACEHOLDER_CSS;
 
@@ -139,7 +133,6 @@ export function openAuthoring(config: StructuredContentConfig, categories: Categ
   const footer = document.createElement('div');
   footer.className = 'sc-authoring-footer';
 
-  // Scope radio buttons (personal/group — excludes 'site')
   const scopeDiv = document.createElement('div');
   scopeDiv.className = 'sc-authoring-scope';
   const savableScopes = (config.scopes || ['personal']).filter((s) => s !== 'site');
@@ -156,7 +149,6 @@ export function openAuthoring(config: StructuredContentConfig, categories: Categ
     scopeDiv.appendChild(label);
   });
 
-  // Save button
   const saveBtn = document.createElement('button');
   saveBtn.className = 'sc-btn sc-btn-primary';
   saveBtn.textContent = 'Save';
@@ -170,7 +162,7 @@ export function openAuthoring(config: StructuredContentConfig, categories: Categ
 
     const description = descInput.value.trim();
     const category = catSelect.value;
-    const content = authoringEditor ? authoringEditor.getContent() : '';
+    const content = modelToHTML(currentBlocks);
     const scopeRadio = document.querySelector(
       'input[name="sc-authoring-scope"]:checked'
     ) as HTMLInputElement | null;
@@ -181,7 +173,6 @@ export function openAuthoring(config: StructuredContentConfig, categories: Categ
     if (config.onSave) {
       try {
         await config.onSave(draft, scope);
-        cleanupEditor();
         closeAuthoring();
       } catch (err) {
         console.error('Failed to save template:', err);
@@ -200,16 +191,12 @@ export function openAuthoring(config: StructuredContentConfig, categories: Categ
 
   // Click outside to close
   overlay.addEventListener('click', (e) => {
-    if (e.target === overlay) {
-      cleanupEditor();
-      closeAuthoring();
-    }
+    if (e.target === overlay) closeAuthoring();
   });
 
   // Escape to close
   const escHandler = (e: KeyboardEvent) => {
     if (e.key === 'Escape') {
-      cleanupEditor();
       closeAuthoring();
       document.removeEventListener('keydown', escHandler);
     }
@@ -218,95 +205,20 @@ export function openAuthoring(config: StructuredContentConfig, categories: Categ
 
   document.body.appendChild(overlay);
 
-  // -- Initialize TinyMCE editor --
-  let debounceTimer: ReturnType<typeof setTimeout>;
-
-  tinymce.init({
-    target: textarea,
-    height: 280,
-    menubar: false,
-    toolbar: 'undo redo | bold italic underline | bullist numlist | insertplaceholder',
-    plugins: 'lists',
-    promotion: false,
-    branding: false,
-    setup: (ed: any) => {
-      authoringEditor = ed;
-
-      // Register Insert Placeholder toolbar button
-      ed.ui.registry.addButton('insertplaceholder', {
-        text: 'Insert Placeholder',
-        onAction: () => openPlaceholderDialog(ed),
-      });
-
-      // Live preview on content change
-      ed.on('input keyup change SetContent', () => {
-        clearTimeout(debounceTimer);
-        debounceTimer = setTimeout(() => {
-          previewContent.innerHTML = ed.getContent();
-        }, 300);
-      });
-    },
+  // -- Initialize builder --
+  renderBuilder(builderDiv, document, (blocks) => {
+    currentBlocks = blocks;
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(() => {
+      previewContent.innerHTML = modelToHTML(blocks);
+    }, 300);
   });
 
   titleInput.focus();
-
-  function cleanupEditor(): void {
-    if (authoringEditor) {
-      authoringEditor.remove();
-      authoringEditor = null;
-    }
-  }
 }
 
 /** Close the authoring modal */
 export function closeAuthoring(): void {
   const overlay = document.getElementById('sc-authoring-overlay');
   if (overlay) overlay.remove();
-}
-
-/** Open the Insert Placeholder dialog in the authoring editor */
-function openPlaceholderDialog(editor: any): void {
-  editor.windowManager.open({
-    title: 'Insert Placeholder',
-    body: {
-      type: 'panel',
-      items: [
-        { type: 'input', name: 'fieldName', label: 'Field name' },
-        {
-          type: 'selectbox',
-          name: 'fieldType',
-          label: 'Type',
-          items: [
-            { text: 'Text', value: 'text' },
-            { text: 'Date', value: 'date' },
-            { text: 'Select', value: 'select' },
-            { text: 'Number', value: 'number' },
-          ],
-        },
-        { type: 'checkbox', name: 'required', label: 'Required' },
-        { type: 'input', name: 'options', label: 'Options (pipe-separated, for Select type)' },
-        { type: 'input', name: 'min', label: 'Min (for Number type)' },
-        { type: 'input', name: 'max', label: 'Max (for Number type)' },
-      ],
-    },
-    buttons: [
-      { type: 'cancel', text: 'Cancel' },
-      { type: 'submit', text: 'Insert', primary: true },
-    ],
-    onSubmit: (api: any) => {
-      const data = api.getData();
-      if (!data.fieldName) return;
-
-      const span = buildPlaceholderSpan(
-        data.fieldName,
-        data.fieldType,
-        data.required,
-        data.options || undefined,
-        data.min ? Number(data.min) : undefined,
-        data.max ? Number(data.max) : undefined
-      );
-      editor.insertContent(span);
-      api.close();
-    },
-  });
 }
