@@ -5,6 +5,8 @@ import {
   injectVersioningStyles,
   showVersionBanner,
   dismissVersionBanner,
+  checkForUpdates,
+  extractFieldValues,
 } from '../src/versioning';
 
 describe('VERSIONING_CSS', () => {
@@ -100,5 +102,122 @@ describe('dismissVersionBanner', () => {
   it('is safe to call when no banner exists', () => {
     const dom = new JSDOM('<!DOCTYPE html><html><head></head><body></body></html>');
     expect(() => dismissVersionBanner(dom.window.document)).not.toThrow();
+  });
+});
+
+describe('extractFieldValues', () => {
+  it('extracts values from unresolved fields with modified text', () => {
+    const dom = new JSDOM(`
+      <div>
+        <span class="tmpl-field" data-field="date" data-required="true" data-default="Enter date">Enter date</span>
+        <span class="tmpl-field" data-field="name" data-default="Enter name">Enter name</span>
+      </div>
+    `);
+    // Simulate user typing into the first field
+    const dateField = dom.window.document.querySelector('[data-field="date"]') as HTMLElement;
+    dateField.textContent = 'March 2026';
+
+    const values = extractFieldValues(dom.window.document);
+    expect(values.get('date')).toBe('March 2026');
+    expect(values.has('name')).toBe(false); // unchanged = default text, not extracted
+  });
+
+  it('returns empty map when no fields are modified', () => {
+    const dom = new JSDOM(`
+      <div>
+        <span class="tmpl-field" data-field="date" data-default="Enter date">Enter date</span>
+      </div>
+    `);
+    const values = extractFieldValues(dom.window.document);
+    expect(values.size).toBe(0);
+  });
+});
+
+describe('checkForUpdates', () => {
+  function makeMockEditor(bodyHtml: string) {
+    const dom = new JSDOM(`<!DOCTYPE html><html><head></head><body>${bodyHtml}</body></html>`);
+    return {
+      dom,
+      getDoc: () => dom.window.document,
+    };
+  }
+
+  it('calls checkVersion when template wrapper has id and version', async () => {
+    const editor = makeMockEditor(
+      '<div class="sc-template" data-template-id="tpl-1" data-template-version="v1"><p>Content</p></div>'
+    );
+    let calledWith: { id: string; version: string } | null = null;
+    const config: any = {
+      checkVersion: async (id: string, version: string) => {
+        calledWith = { id, version };
+        return null;
+      },
+    };
+
+    await checkForUpdates(editor, config);
+    expect(calledWith).toEqual({ id: 'tpl-1', version: 'v1' });
+  });
+
+  it('does not call checkVersion when no sc-template wrapper', async () => {
+    const editor = makeMockEditor('<p>Plain content</p>');
+    let called = false;
+    const config: any = {
+      checkVersion: async () => { called = true; return null; },
+    };
+
+    await checkForUpdates(editor, config);
+    expect(called).toBe(false);
+  });
+
+  it('does not call checkVersion when no version attribute', async () => {
+    const editor = makeMockEditor(
+      '<div class="sc-template" data-template-id="tpl-1"><p>No version</p></div>'
+    );
+    let called = false;
+    const config: any = {
+      checkVersion: async () => { called = true; return null; },
+    };
+
+    await checkForUpdates(editor, config);
+    expect(called).toBe(false);
+  });
+
+  it('does not call checkVersion when callback not configured', async () => {
+    const editor = makeMockEditor(
+      '<div class="sc-template" data-template-id="tpl-1" data-template-version="v1"><p>Content</p></div>'
+    );
+
+    // Should not throw
+    await checkForUpdates(editor, {});
+  });
+
+  it('shows banner when checkVersion returns a result', async () => {
+    const editor = makeMockEditor(
+      '<div class="sc-template" data-template-id="tpl-1" data-template-version="v1"><p>Content</p></div>'
+    );
+    const config: any = {
+      checkVersion: async () => ({
+        latestVersion: 'v2',
+        latestTemplate: { id: 'tpl-1', title: 'Clinical Encounter', content: '<p>New</p>', version: 'v2' },
+      }),
+    };
+
+    await checkForUpdates(editor, config);
+    const banner = editor.dom.window.document.querySelector('.sc-version-banner');
+    expect(banner).not.toBeNull();
+    expect(banner!.textContent).toContain('Clinical Encounter');
+  });
+
+  it('does not show banner when checkVersion returns null', async () => {
+    const editor = makeMockEditor(
+      '<div class="sc-template" data-template-id="tpl-1" data-template-version="v1"><p>Content</p></div>'
+    );
+    const config: any = {
+      checkVersion: async () => null,
+    };
+
+    await checkForUpdates(editor, config);
+    const banner = editor.dom.window.document.querySelector('.sc-version-banner');
+    expect(banner).toBeNull();
   });
 });

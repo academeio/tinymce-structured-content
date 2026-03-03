@@ -98,3 +98,51 @@ export function showVersionBanner(
 
   doc.body.insertBefore(banner, doc.body.firstChild);
 }
+
+/** Extract current values from unresolved placeholder fields (for migration) */
+export function extractFieldValues(doc: Document): Map<string, string> {
+  const fields = findPlaceholderFields(doc);
+  const values = new Map<string, string>();
+
+  fields.forEach((field) => {
+    const text = (field.element.textContent || '').trim();
+    const defaultText = field.element.getAttribute('data-default') || field.defaultText;
+    if (text !== defaultText) {
+      values.set(field.name, text);
+    }
+  });
+
+  return values;
+}
+
+/** Check if the editor content uses an outdated template version */
+export async function checkForUpdates(editor: any, config: StructuredContentConfig): Promise<void> {
+  if (!config.checkVersion) return;
+
+  const doc: Document = editor.getDoc();
+  const wrapper = doc.querySelector('.sc-template[data-template-id][data-template-version]');
+  if (!wrapper) return;
+
+  const templateId = wrapper.getAttribute('data-template-id')!;
+  const currentVersion = wrapper.getAttribute('data-template-version')!;
+
+  const result = await config.checkVersion(templateId, currentVersion);
+  if (!result) return;
+
+  showVersionBanner(
+    doc,
+    result.latestTemplate.title,
+    () => migrateTemplate(editor, config, wrapper as HTMLElement, result),
+    () => dismissVersionBanner(doc)
+  );
+}
+
+/** Migrate the editor content to the latest template version (implementation in Task 5) */
+export function migrateTemplate(
+  editor: any,
+  config: StructuredContentConfig,
+  wrapper: HTMLElement,
+  result: VersionCheckResult
+): void {
+  // Stub — full implementation in Task 5
+}
