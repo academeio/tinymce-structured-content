@@ -1,4 +1,5 @@
 import type { Template, Category, StructuredContentConfig } from './types';
+import { escapeHtml } from './utils';
 import { injectModalStyles } from './styles';
 import { insertTemplate } from './insertion';
 import { activatePlaceholders } from './placeholders';
@@ -26,12 +27,7 @@ export function filterTemplates(
   return filtered;
 }
 
-/** Escape HTML for safe insertion into the modal DOM */
-function esc(str: string): string {
-  const div = document.createElement('div');
-  div.appendChild(document.createTextNode(str));
-  return div.innerHTML;
-}
+const esc = escapeHtml;
 
 /** Open the template browser modal */
 export function openBrowser(editor: any, config: StructuredContentConfig): void {

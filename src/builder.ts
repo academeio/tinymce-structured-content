@@ -1,4 +1,5 @@
 import type { BlockType, TemplateBlock, HeadingBlock, ParagraphBlock, TextFieldBlock, DateFieldBlock, SelectFieldBlock, NumberFieldBlock } from './types';
+import { escapeHtml } from './utils';
 
 let blockCounter = 0;
 
@@ -37,14 +38,7 @@ export function createBlock(type: BlockType): TemplateBlock {
   }
 }
 
-/** Escape HTML special characters */
-function esc(str: string): string {
-  return str
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
-}
+const esc = escapeHtml;
 
 /** Build the tmpl-field span for a field block */
 function fieldSpan(name: string, type: string, placeholder: string, required: boolean, extras: string = ''): string {
