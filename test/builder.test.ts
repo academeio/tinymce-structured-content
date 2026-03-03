@@ -1,5 +1,7 @@
 import { describe, it, expect } from 'vitest';
+import { JSDOM } from 'jsdom';
 import { autoSlug, createBlock, modelToHTML } from '../src/builder';
+import { BUILDER_CSS, injectBuilderStyles } from '../src/builder-styles';
 import type { HeadingBlock, ParagraphBlock, TextFieldBlock, DateFieldBlock, SelectFieldBlock, NumberFieldBlock, TemplateBlock } from '../src/types';
 
 describe('autoSlug', () => {
@@ -190,5 +192,29 @@ describe('modelToHTML', () => {
     const html = modelToHTML([{ id: 'b1', type: 'heading', level: 3, text: 'Hi' }]);
     expect(html).toMatch(/^<div class="sc-template">/);
     expect(html).toMatch(/<\/div>$/);
+  });
+});
+
+describe('BUILDER_CSS', () => {
+  it('contains palette styles', () => {
+    expect(BUILDER_CSS).toContain('.sc-builder-palette');
+  });
+
+  it('contains canvas styles', () => {
+    expect(BUILDER_CSS).toContain('.sc-builder-canvas');
+  });
+
+  it('contains block card styles', () => {
+    expect(BUILDER_CSS).toContain('.sc-block-card');
+  });
+});
+
+describe('injectBuilderStyles', () => {
+  it('injects styles idempotently', () => {
+    const dom = new JSDOM('<!DOCTYPE html><html><head></head><body></body></html>');
+    injectBuilderStyles(dom.window.document);
+    injectBuilderStyles(dom.window.document);
+    const styles = dom.window.document.querySelectorAll('#sc-builder-styles');
+    expect(styles).toHaveLength(1);
   });
 });
