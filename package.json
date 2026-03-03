@@ -1,6 +1,6 @@
 {
   "name": "@academeio/tinymce-structured-content",
-  "version": "0.1.0",
+  "version": "1.1.0",
   "description": "TinyMCE 7 plugin for structured content templates with placeholder fields",
   "type": "module",
   "main": "dist/plugin.js",

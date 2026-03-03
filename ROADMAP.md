@@ -1,8 +1,14 @@
 # tinymce-structured-content — Roadmap
 
-## Current: v0.1.0 (Released 01-03-2026)
+> **Status: Complete.** All 6 phases shipped. Current release: **v1.1.0** (03-03-2026).
+> Project paused pending user feedback from beta testing in production ePortfolios.
+> v1.1.0 added the visual template builder on top of the v1.0.0 roadmap.
 
-MVP feature set:
+---
+
+## v0.1.0 — MVP (Released 01-03-2026)
+
+Feature set:
 - Template browser modal with category sidebar, search, live preview
 - Two insertion modes: cursor (inline snippet) and document (full replace)
 - Placeholder field system (`<span class="tmpl-field" data-field="name" data-required="true">`)
