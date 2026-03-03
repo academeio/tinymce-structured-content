@@ -1,5 +1,6 @@
 import type { StructuredContentConfig } from './types';
 import { openBrowser } from './browser';
+import { checkForUpdates } from './versioning';
 
 declare const tinymce: any;
 
@@ -21,5 +22,13 @@ tinymce.PluginManager.add('structuredcontent', (editor: any) => {
     icon: 'template',
     text: config.strings?.menuText || 'Structured Content',
     onAction: () => openBrowser(editor, config),
+  });
+
+  // Check for template version updates on content load (once per session)
+  let versionChecked = false;
+  editor.on('SetContent', () => {
+    if (versionChecked) return;
+    versionChecked = true;
+    checkForUpdates(editor, config).catch(() => {});
   });
 });
