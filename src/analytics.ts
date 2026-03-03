@@ -42,3 +42,32 @@ export function getTemplateMetrics(editor: any): TemplateMetrics | null {
     fieldBreakdown,
   };
 }
+
+/**
+ * Fire a template_inserted analytics event.
+ * Called from browser.ts after insertTemplate().
+ */
+export function fireInsertionEvent(
+  editor: any,
+  config: StructuredContentConfig,
+  template: Template,
+  mode: 'cursor' | 'document'
+): void {
+  if (!config.onAnalyticsEvent) return;
+
+  const doc: Document = editor.getDoc();
+  const fields = findPlaceholderFields(doc);
+
+  const event: TemplateInsertedEvent = {
+    type: 'template_inserted',
+    templateId: template.id,
+    templateTitle: template.title,
+    templateVersion: template.version,
+    timestamp: Date.now(),
+    insertionMode: mode,
+    fieldCount: fields.length,
+    requiredFieldCount: fields.filter((f) => f.required).length,
+  };
+
+  config.onAnalyticsEvent(event);
+}
