@@ -73,3 +73,13 @@ See ~/Development/eportfolios/docs/plans/01-03-2026-tinymce-structured-content-d
 - Info banner: "A newer version is available" with Update / Dismiss
 - Migration: replaces content, maps unresolved field values by `data-field` name
 - `src/versioning.ts` — version check, banner, migration module
+
+## Template Analytics (v1.0.0)
+
+- `onAnalyticsEvent?: (event: AnalyticsEvent) => void` — single callback for all analytics events
+- `template_inserted` event — fired after template insertion (includes template ID, title, version, mode, field counts)
+- `template_submitted` event — fired on `BeforeGetContent` (includes full `TemplateMetrics`)
+- `getTemplateMetrics(editor)` — on-demand field completion snapshot (total, required, resolved, percentage, breakdown)
+- `TemplateMetrics`, `FieldMetric`, `TemplateInsertedEvent`, `TemplateSubmittedEvent` interfaces
+- `src/analytics.ts` — analytics module
+- `data-template-title` attribute stamped on cursor-mode insertions
