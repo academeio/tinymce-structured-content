@@ -100,3 +100,62 @@ export interface TemplateSubmittedEvent extends AnalyticsEvent {
   type: 'template_submitted';
   metrics: TemplateMetrics;
 }
+
+// -- Builder block types --
+
+export type BlockType = 'heading' | 'paragraph' | 'text-field' | 'date-field' | 'select-field' | 'number-field';
+
+export interface HeadingBlock {
+  id: string;
+  type: 'heading';
+  level: 2 | 3 | 4;
+  text: string;
+}
+
+export interface ParagraphBlock {
+  id: string;
+  type: 'paragraph';
+  text: string;
+}
+
+export interface TextFieldBlock {
+  id: string;
+  type: 'text-field';
+  name: string;
+  label: string;
+  placeholder: string;
+  required: boolean;
+}
+
+export interface DateFieldBlock {
+  id: string;
+  type: 'date-field';
+  name: string;
+  label: string;
+  placeholder: string;
+  required: boolean;
+}
+
+export interface SelectFieldBlock {
+  id: string;
+  type: 'select-field';
+  name: string;
+  label: string;
+  placeholder: string;
+  required: boolean;
+  options: string[];
+}
+
+export interface NumberFieldBlock {
+  id: string;
+  type: 'number-field';
+  name: string;
+  label: string;
+  placeholder: string;
+  required: boolean;
+  min?: number;
+  max?: number;
+}
+
+export type TemplateBlock = HeadingBlock | ParagraphBlock | TextFieldBlock
+  | DateFieldBlock | SelectFieldBlock | NumberFieldBlock;
