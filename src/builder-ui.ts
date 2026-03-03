@@ -270,38 +270,40 @@ export function renderBuilder(
       // -- Body (inline editor) --
       const body = doc.createElement('div');
       body.className = 'sc-block-body';
-      renderBlockEditor(body, doc, block, i);
+      renderBlockEditor(body, doc, block, summary);
       card.appendChild(body);
 
       canvas.appendChild(card);
     }
   }
 
-  function renderBlockEditor(body: HTMLElement, doc: Document, block: TemplateBlock, index: number): void {
+  function renderBlockEditor(body: HTMLElement, doc: Document, block: TemplateBlock, summaryEl: HTMLElement): void {
+    /** Update the header summary text to reflect current block state */
+    function updateSummary(): void {
+      summaryEl.textContent = getBlockSummary(block);
+    }
+
     switch (block.type) {
       case 'heading': {
-        const hBlock = block as HeadingBlock;
         addSelectField(body, doc, 'Level', [
           { value: '2', label: 'H2' },
           { value: '3', label: 'H3' },
           { value: '4', label: 'H4' },
-        ], String(hBlock.level), (val) => {
-          hBlock.level = Number(val) as 2 | 3 | 4;
-          renderCanvas();
+        ], String(block.level), (val) => {
+          block.level = Number(val) as 2 | 3 | 4;
           notify();
         });
-        addTextField(body, doc, 'Text', hBlock.text, (val) => {
-          hBlock.text = val;
-          renderCanvas();
+        addTextField(body, doc, 'Text', block.text, (val) => {
+          block.text = val;
+          updateSummary();
           notify();
         });
         break;
       }
       case 'paragraph': {
-        const pBlock = block as ParagraphBlock;
-        addTextField(body, doc, 'Text', pBlock.text, (val) => {
-          pBlock.text = val;
-          renderCanvas();
+        addTextField(body, doc, 'Text', block.text, (val) => {
+          block.text = val;
+          updateSummary();
           notify();
         });
         break;
@@ -312,35 +314,36 @@ export function renderBuilder(
       case 'select-field': {
         const fBlock = block as TextFieldBlock | DateFieldBlock | NumberFieldBlock | SelectFieldBlock;
 
+        // Name input ref needed by label callback for auto-slug sync
+        let nameInputEl: HTMLInputElement | null = null;
+
         // Label
         addTextField(body, doc, 'Label', fBlock.label, (val) => {
           fBlock.label = val;
-          if (!manualNames.has(block.id)) {
+          if (!manualNames.has(block.id) && nameInputEl) {
             fBlock.name = autoSlug(val);
+            nameInputEl.value = fBlock.name;
           }
-          renderCanvas();
+          updateSummary();
           notify();
         });
 
         // Name
-        addTextField(body, doc, 'Name', fBlock.name, (val) => {
+        nameInputEl = addTextField(body, doc, 'Name', fBlock.name, (val) => {
           manualNames.add(block.id);
           fBlock.name = val;
-          renderCanvas();
           notify();
         });
 
         // Placeholder
         addTextField(body, doc, 'Placeholder', fBlock.placeholder, (val) => {
           fBlock.placeholder = val;
-          renderCanvas();
           notify();
         });
 
         // Required
         addCheckbox(body, doc, 'Required', fBlock.required, (val) => {
           fBlock.required = val;
-          renderCanvas();
           notify();
         });
 
@@ -349,7 +352,6 @@ export function renderBuilder(
           const sBlock = block as SelectFieldBlock;
           addTextField(body, doc, 'Options (comma-separated)', sBlock.options.join(', '), (val) => {
             sBlock.options = val.split(',').map((s) => s.trim()).filter((s) => s.length > 0);
-            renderCanvas();
             notify();
           });
         }
@@ -358,12 +360,10 @@ export function renderBuilder(
           const nBlock = block as NumberFieldBlock;
           addNumberField(body, doc, 'Min', nBlock.min, (val) => {
             nBlock.min = val;
-            renderCanvas();
             notify();
           });
           addNumberField(body, doc, 'Max', nBlock.max, (val) => {
             nBlock.max = val;
-            renderCanvas();
             notify();
           });
         }
