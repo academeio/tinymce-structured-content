@@ -403,7 +403,7 @@ function renderModal(
       }
     }
 
-    insertTemplate(editor, selectedTemplate.content, selectedTemplate.id, mode, config);
+    insertTemplate(editor, selectedTemplate.content, selectedTemplate.id, mode, config, selectedTemplate.version);
     closeBrowser();
     activatePlaceholders(editor, config);
   }

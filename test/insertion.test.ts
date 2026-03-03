@@ -70,4 +70,18 @@ describe('insertTemplate', () => {
     expect(editor._content).toContain('Dr. Smith');
     expect(editor._content).not.toContain('{{author}}');
   });
+
+  it('stamps data-template-version when version is provided (cursor mode)', () => {
+    const editor = mockEditor();
+    insertTemplate(editor, '<p>Hello</p>', 'tpl-1', 'cursor', {}, 'v2.1');
+    expect(editor._content).toContain('data-template-version="v2.1"');
+    expect(editor._content).toContain('data-template-id="tpl-1"');
+  });
+
+  it('does not stamp version when not provided (backward compat)', () => {
+    const editor = mockEditor();
+    insertTemplate(editor, '<p>Hello</p>', 'tpl-1', 'cursor', {});
+    expect(editor._content).not.toContain('data-template-version');
+    expect(editor._content).toContain('data-template-id="tpl-1"');
+  });
 });
