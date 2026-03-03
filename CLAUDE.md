@@ -13,11 +13,14 @@ TinyMCE 7 plugin for structured content templates. Modular TypeScript, bundled v
 ## Architecture
 
 - `src/plugin.ts` — entry point, TinyMCE PluginManager registration
-- `src/types.ts` — TypeScript interfaces (Template, Category, StructuredContentConfig)
+- `src/types.ts` — TypeScript interfaces (Template, Category, StructuredContentConfig, TemplateBlock)
 - `src/browser.ts` — template browser modal UI
 - `src/placeholders.ts` — placeholder field system (rendering, Tab navigation, cleanup)
 - `src/insertion.ts` — template insertion logic (variable replacement, cursor/document mode)
 - `src/styles.ts` — CSS injection for placeholders and modal
+- `src/builder.ts` — block model logic (`autoSlug`, `createBlock`, `modelToHTML`)
+- `src/builder-ui.ts` — visual template builder (palette, canvas, inline editing)
+- `src/builder-styles.ts` — CSS for builder components
 
 ## Design
 
@@ -62,6 +65,17 @@ See ~/Development/eportfolios/docs/plans/01-03-2026-tinymce-structured-content-d
 - `buildPlaceholderSpan(name, type, required, options?, min?, max?)` — generates tmpl-field HTML
 - `src/authoring.ts` — authoring modal module
 - `src/authoring-styles.ts` — authoring CSS
+
+## Template Builder
+
+- Block-based visual builder replaces TinyMCE editor in authoring modal
+- JSON block model as source of truth; `modelToHTML(blocks)` generates HTML for storage
+- Block types: `heading`, `paragraph`, `text-field`, `date-field`, `select-field`, `number-field`
+- Click-to-add palette, inline editing (one block expanded at a time)
+- Auto-slug: label → snake_case name (stops when user manually edits)
+- Reorder via up/down buttons, delete with no confirmation
+- Live preview pane renders `modelToHTML()` debounced 300ms
+- Design doc: `docs/plans/03-03-2026-template-builder-design.md`
 
 ## Template Versioning (v0.6.0)
 
